@@ -12,13 +12,13 @@ namespace StarOwner.Content.NPCs.Mode
         public SO_Phase1(NPC npc) : base(npc)
         {
         }
-        public StarOwner StarOwner => NPC.ModNPC as StarOwner;
+        public StarOwnerNPC StarOwner => NPC.ModNPC as StarOwnerNPC;
         public override void OnEnterMode()
         {
             base.OnEnterMode();
-            StarOwner.drawPlayer.head = EquipLoader.GetEquipSlot(StarOwnerMod.Instance, "StarOwnerHead", EquipType.Head);
-            StarOwner.drawPlayer.body = EquipLoader.GetEquipSlot(StarOwnerMod.Instance, "StarOwnerBody", EquipType.Body);
-            StarOwner.drawPlayer.legs = EquipLoader.GetEquipSlot(StarOwnerMod.Instance, "StarOwnerLegs", EquipType.Legs);
+            StarOwner.drawPlayer.head = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerHead", EquipType.Head);
+            StarOwner.drawPlayer.body = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerBody", EquipType.Body);
+            StarOwner.drawPlayer.legs = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerLegs", EquipType.Legs);
         }
         public override bool ActivationCondition(NPCModes activeMode) => false;
         public override bool SwitchCondition(NPCModes changeToMode) => true;

@@ -7,7 +7,7 @@ using Terraria.Graphics;
 
 namespace StarOwner.Core.Systems
 {
-    public class CramerSystem : ModSystem
+    public class CameraSystem : ModSystem
     {
         public static Vector2 ScreenCenter;
         /// <summary>
@@ -18,8 +18,10 @@ namespace StarOwner.Core.Systems
         {
             if(ScreenCenter != default)
             {
-                Main.screenPosition = Vector2.Lerp(ScreenCenter - Main.ScreenSize.ToVector2() * 0.5f, Main.screenPosition,0.2f);
-                ScreenCenter = default;
+                Main.screenPosition = Vector2.Lerp(ScreenCenter - Main.ScreenSize.ToVector2() * 0.5f, Main.screenPosition,0.1f);
+                ScreenCenter = Vector2.Lerp(ScreenCenter,default,0.9f);
+                if (ScreenCenter.LengthSquared() < 1000000)
+                    ScreenCenter = default;
             }
         }
         public override void ModifyTransformMatrix(ref SpriteViewMatrix Transform)

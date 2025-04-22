@@ -9,7 +9,7 @@ namespace StarOwner.Content.NPCs.Skills
 {
     public class StarOwnerSkills : NPCSkills
     {
-        public StarOwner StarOwner => NPC.ModNPC as StarOwner;
+        public StarOwnerNPC StarOwner => NPC.ModNPC as StarOwnerNPC;
         public Player Target => StarOwner.TargetPlayer;
         public StarOwnerSkills(NPC npc) : base(npc)
         {
@@ -43,9 +43,9 @@ namespace StarOwner.Content.NPCs.Skills
             StarOwner.drawPlayer.direction = NPC.spriteDirection;
             StarOwner.drawPlayer.UpdateDyes();
             StarOwner.drawPlayer.PlayerFrame();
-            StarOwner.drawPlayer.head = EquipLoader.GetEquipSlot(StarOwnerMod.Instance, "StarOwnerHead", EquipType.Head);
-            StarOwner.drawPlayer.body = EquipLoader.GetEquipSlot(StarOwnerMod.Instance, "StarOwnerBody", EquipType.Body);
-            StarOwner.drawPlayer.legs = EquipLoader.GetEquipSlot(StarOwnerMod.Instance, "StarOwnerLegs", EquipType.Legs);
+            StarOwner.drawPlayer.head = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerHead", EquipType.Head);
+            StarOwner.drawPlayer.body = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerBody", EquipType.Body);
+            StarOwner.drawPlayer.legs = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerLegs", EquipType.Legs);
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using SubworldLibrary;
+﻿using StarOwner.Content.NPCs;
+using StarOwner.Core.Systems;
+using SubworldLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,6 +47,22 @@ namespace StarOwner.Content.Subworld
             if (player.dead)
             {
                 SubworldSystem.Exit();
+            }
+            // Main.NewText(player.position.ToString());
+            if (!BossAndDownedSystem.downedStarOwner && BossAndDownedSystem.StarOwnerIndex == -1 && player.position.Y > 4300 && player.position.Y < 4600 && player.position.X > 12200 && player.position.X < 12310) // 召唤Boss
+            {
+                NPC.NewNPCDirect(player.GetSource_FromThis(), 11214, 4326, ModContent.NPCType<NPCs.StarOwnerNPC>());
+            }
+            else if (BossAndDownedSystem.StarOwnerIndex != -1)
+            {
+                if(player.position.X < 11102)
+                {
+                    player.velocity.X = 2;
+                }
+                else if(player.position.X > 15036)
+                {
+                    player.velocity.X = -2;
+                }
             }
         }
         public class SummonGround : GenPass

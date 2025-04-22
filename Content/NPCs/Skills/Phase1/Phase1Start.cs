@@ -1,4 +1,6 @@
-﻿using StarOwner.Core.Systems;
+﻿using StarOwner.Core.ModPlayers;
+using StarOwner.Core.SkillsNPC;
+using StarOwner.Core.Systems;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,8 +19,8 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
             if (NPC.localAI[0] < 100)
                 NPC.localAI[0]++;
             NPC.boss = false;
-            CramerSystem.ScreenCenter = NPC.Center;
-            CramerSystem.ScreenScale = MathHelper.Lerp(1,2,Math.Min(NPC.localAI[0] / 100f,1));
+            CameraSystem.ScreenCenter = NPC.Center;
+            CameraSystem.ScreenScale = MathHelper.Lerp(1,2,Math.Min(NPC.localAI[0] / 100f,1));
             NPC.ai[0]++;
             if (NPC.ai[0] > 550)
             {
@@ -26,7 +28,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
             }
             else
             {
-
+                Target.GetModPlayer<ControlPlayer>().StopControl = 1;
             }
             NPC.dontTakeDamage = true;
             switch ((int)NPC.ai[0])
@@ -38,7 +40,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                     PopupText.NewText(new AdvancedPopupRequest()
                     {
                         Color = Color.Purple,
-                        Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text1"),
+                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text1"),
                         DurationInFrames = 120,
                         Velocity = -Vector2.UnitY
                     }, NPC.Top);
@@ -47,7 +49,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                     PopupText.NewText(new AdvancedPopupRequest()
                     {
                         Color = Color.Purple,
-                        Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text2"),
+                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text2"),
                         DurationInFrames = 120,
                         Velocity = -Vector2.UnitY
                     }, NPC.Top);
@@ -56,7 +58,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                     PopupText.NewText(new AdvancedPopupRequest()
                     {
                         Color = Color.Purple,
-                        Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text3"),
+                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text3"),
                         DurationInFrames = 120,
                         Velocity = -Vector2.UnitY
                     }, NPC.Top);
@@ -65,7 +67,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                     PopupText.NewText(new AdvancedPopupRequest()
                     {
                         Color = Color.Purple,
-                        Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text4"),
+                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text4"),
                         DurationInFrames = 120,
                         Velocity = -Vector2.UnitY
                     }, NPC.Top);
@@ -74,7 +76,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                     PopupText.NewText(new AdvancedPopupRequest()
                     {
                         Color = Color.Purple,
-                        Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text5"),
+                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text5"),
                         DurationInFrames = 120,
                         Velocity = -Vector2.UnitY
                     }, NPC.Top);
@@ -83,7 +85,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                     PopupText.NewText(new AdvancedPopupRequest()
                     {
                         Color = Color.Purple,
-                        Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text6"),
+                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text6"),
                         DurationInFrames = 120,
                         Velocity = -Vector2.UnitY
                     }, NPC.Top);
@@ -92,7 +94,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                     PopupText.NewText(new AdvancedPopupRequest()
                     {
                         Color = Color.Purple,
-                        Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text7"),
+                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text7"),
                         DurationInFrames = 120,
                         Velocity = -Vector2.UnitY
                     }, NPC.Top);
@@ -101,7 +103,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                     PopupText.NewText(new AdvancedPopupRequest()
                     {
                         Color = Color.Purple,
-                        Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text8"),
+                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text8"),
                         DurationInFrames = 120,
                         Velocity = -Vector2.UnitY
                     }, NPC.Top);
@@ -118,7 +120,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                         PopupText.NewText(new AdvancedPopupRequest()
                         {
                             Color = Color.Purple,
-                            Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text9"),
+                            Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text9"),
                             DurationInFrames = 120,
                             Velocity = -Vector2.UnitY
                         }, NPC.Top);
@@ -128,7 +130,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                     PopupText.NewText(new AdvancedPopupRequest()
                     {
                         Color = Color.Purple,
-                        Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text10"),
+                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text10"),
                         DurationInFrames = 120,
                         Velocity = -Vector2.UnitY
                     }, NPC.Top);
@@ -137,7 +139,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                     PopupText.NewText(new AdvancedPopupRequest()
                     {
                         Color = Color.Purple,
-                        Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text11"),
+                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text11"),
                         DurationInFrames = 120,
                         Velocity = -Vector2.UnitY
                     }, NPC.Top);
@@ -154,7 +156,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                         PopupText.NewText(new AdvancedPopupRequest()
                         {
                             Color = Color.Purple,
-                            Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text12"),
+                            Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text12"),
                             DurationInFrames = 180,
                             Velocity = -Vector2.UnitY
                         }, NPC.Top);
@@ -164,7 +166,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                     PopupText.NewText(new AdvancedPopupRequest()
                     {
                         Color = Color.Purple,
-                        Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text13"),
+                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text13"),
                         DurationInFrames = 180,
                         Velocity = -Vector2.UnitY
                     }, NPC.Top);
@@ -173,7 +175,7 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
                     PopupText.NewText(new AdvancedPopupRequest()
                     {
                         Color = Color.Purple,
-                        Text = TheUtility.RegisterText(StarOwner.Phase1Text + ".Text14"),
+                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase1Text + ".Text14"),
                         DurationInFrames = 180,
                         Velocity = -Vector2.UnitY
                     }, NPC.Top);
@@ -181,6 +183,11 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
 
             }
             base.AI();
+        }
+        public override bool SwitchCondition(NPCSkills changeToSkill)
+        {
+            return true;
+            return NPC.ai[0] > 1500;
         }
     }
 }
