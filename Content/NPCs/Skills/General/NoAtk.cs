@@ -18,6 +18,7 @@ namespace StarOwner.Content.NPCs.Skills.General
             StarOwner.drawPlayer.SetCompositeArmFront(false, Player.CompositeArmStretchAmount.Full, 0f);
             NPC.ai[0]++;
             float disY = NPC.Center.Y - Target.Center.Y;
+            NPC.defense = 0;
             //Main.NewText(disY);
             NPC.rotation = MathF.Sin(NPC.ai[0] * 0.2f) * 0.3f;
             if (NPC.ai[0] > 300)

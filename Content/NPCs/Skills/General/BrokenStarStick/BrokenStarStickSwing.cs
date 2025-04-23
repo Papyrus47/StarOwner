@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StarOwner.Content.NPCs.Skills.General
+namespace StarOwner.Content.NPCs.Skills.General.BrokenStarStick
 {
     public class BrokenStarStickSwing : BasicSwingSkill
     {
@@ -37,8 +37,9 @@ namespace StarOwner.Content.NPCs.Skills.General
             gd.Textures[1] = ModAsset.ColorMap_1.Value;
             gd.Textures[2] = ModAsset.Stars.Value;
             Matrix projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, 0, 1);
+            Matrix scale = Matrix.CreateScale(Main.GameViewMatrix.Zoom.Length() / MathF.Sqrt(2));
             Matrix model = Matrix.CreateTranslation(new Vector3(-Main.screenPosition.X, -Main.screenPosition.Y, 0));
-            effect.Parameters["uTransform"].SetValue(model * projection);
+            effect.Parameters["uTransform"].SetValue( model * projection * scale);
             swingHelper.Swing_Draw_ItemAndTrailling(Color.White, ModAsset.Extra_5.Value, (_) => Color.White, effect);
             return false;
         }

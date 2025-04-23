@@ -1,17 +1,18 @@
-﻿using StarOwner.Core.ModPlayers;
+﻿using StarOwner.Content.NPCs.Particles;
+using StarOwner.Core.ModPlayers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StarOwner.Content.NPCs.Skills.General
+namespace StarOwner.Content.NPCs.Skills.General.BrokenStarStick
 {
     public class BrokenStarStickSwing_Jump : BrokenStarStickSwing
     {
         public BrokenStarStickSwing_Jump(NPC npc, PreSwing preSwing, OnSwing onSwing, PostSwing postSwing, Setting setting) : base(npc, preSwing, onSwing, postSwing, setting)
         {
-            setting.ExtraUpdate = 5;
+
         }
         public Vector2 fixedPos;
         public override void AI()
@@ -92,16 +93,20 @@ namespace StarOwner.Content.NPCs.Skills.General
                         swingTime = onSwing.SwingTimeChange.Invoke(swingTime);
 
                         swingHelper.SwingAI(setting.SwingLenght, NPC.spriteDirection, swingTime * setting.SwingRot * setting.SwingDirectionChange.ToDirectionInt());
-                        if (!Collision.CanHit(NPC.Center,1,1,NPC.Center + swingHelper.velocity,1,1))
+                        try
                         {
-                            NPC.velocity = (fixedPos - swingHelper.velocity - NPC.Center) * 1.5f;
-                            NPC.Center = fixedPos - swingHelper.velocity;
-                            swingHelper.ProjFixedPos(NPC.Center);
+                            if (!Collision.CanHit(NPC.Center, 1, 1, NPC.Center + swingHelper.velocity, 1, 1) && NPC.ai[1] > 2)
+                            {
+                                NPC.velocity = (fixedPos - swingHelper.velocity - NPC.Center) * 0.2f;
+                                NPC.Center = fixedPos - swingHelper.velocity;
+                                swingHelper.ProjFixedPos(NPC.Center);
+                            }
+                            else
+                            {
+                                fixedPos = NPC.Center + swingHelper.velocity;
+                            }
                         }
-                        else
-                        {
-                            fixedPos = NPC.Center + swingHelper.velocity;
-                        }
+                        catch { }
                         #region 碰撞检测
                         if (swingHelper.GetColliding(Target.getRect()) && !Target.immune && !ByDef)
                         {
@@ -130,6 +135,11 @@ namespace StarOwner.Content.NPCs.Skills.General
                             Player.HurtInfo hurtInfo = hurtModifiers.ToHurtInfo(WeaponDamage, Target.statDefense, Target.DefenseEffectiveness.Value, 0, true);
                             hurtInfo.DamageSource = PlayerDeathReason.ByNPC(NPC.whoAmI);
                             Target.Hurt(hurtInfo);
+                            for (int j = Main.rand.Next(5, 8); j > 0; j--)
+                            {
+                                HitPiecredExtra98 hitPiecredExtra98 = new(swingHelper.velocity.RotatedBy(MathHelper.PiOver2 * setting.SwingDirectionChange.ToDirectionInt() * NPC.spriteDirection) * 0.2f, Target.Center);
+                                Core.Particles.ParticlesSystem.AddParticle(Core.Particles.BasicParticle.DrawLayer.AfterDust, hitPiecredExtra98);
+                            }
                             Target.GetModPlayer<ControlPlayer>().StopControl = (int)Math.Log2(hurtInfo.Damage) * 10;
                             StarOwner.DamageAdd += 0.5f;
                             Target.immuneTime /= 3;
@@ -138,7 +148,7 @@ namespace StarOwner.Content.NPCs.Skills.General
                             if (AddStarPower)
                                 Target.GetModPlayer<StarPowerPlayer>().starPower.Value += WeaponDamage;
                             OnHitStopTime = setting.OnHitStopTime * (setting.ExtraUpdate + 1);
-                            Main.instance.CameraModifiers.Add(new PunchCameraModifier(Target.position, -Vector2.UnitX * Target.direction, MathF.Log2(hurtInfo.Damage) * 3, 60, (int)MathF.Log2(hurtInfo.Damage) * 3 + 1));
+                           Main.instance.CameraModifiers.Add(new PunchCameraModifier(Target.position, -Vector2.UnitX * Target.direction, MathF.Log2(hurtInfo.Damage), 60, 20));
                         }
                         #endregion
                     }

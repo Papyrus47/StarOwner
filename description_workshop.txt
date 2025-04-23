@@ -1,1 +1,7 @@
-This description will show up on the steam page, check out https://steamcommunity.com/comment/Guide/formattinghelp.
+﻿星辰之主——强大的对手，因为一些意外误入到了泰拉瑞亚的世界里面。
+一阶段Boss武器：繁星刺破（刺剑），破星之斩（锤头剑），剥皮与断骨（两把斧头），断星棍（棍），癫疯与恐惧（双枪）
+默认按下F可以格挡星辰之主的大部分攻击。
+默认按下X可以使用闪避冲刺。
+使用玩家版的破星之斩进入星辰之地。
+目前星辰之主停留在第一阶段，尝试击败星辰之主的第一阶段吧！
+有什么反馈欢迎留言。

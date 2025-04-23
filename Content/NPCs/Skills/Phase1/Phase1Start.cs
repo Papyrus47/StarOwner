@@ -16,11 +16,11 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
         }
         public override void AI()
         {
-            if (NPC.localAI[0] < 100)
-                NPC.localAI[0]++;
+            //if (NPC.localAI[0] < 100)
+            //    NPC.localAI[0]++;
             NPC.boss = false;
             CameraSystem.ScreenCenter = NPC.Center;
-            CameraSystem.ScreenScale = MathHelper.Lerp(1,2,Math.Min(NPC.localAI[0] / 100f,1));
+            CameraSystem.TargetScale = 2f;
             NPC.ai[0]++;
             if (NPC.ai[0] > 550)
             {

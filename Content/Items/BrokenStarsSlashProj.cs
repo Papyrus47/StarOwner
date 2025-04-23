@@ -126,8 +126,9 @@ namespace StarOwner.Content.Items
             gd.Textures[1] = ModAsset.ColorMap_0.Value;
             gd.Textures[2] = ModAsset.Stars.Value;
             Matrix projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, 0, 1);
+            Matrix scale = Matrix.CreateScale(Main.GameViewMatrix.Zoom.Length() / MathF.Sqrt(2));
             Matrix model = Matrix.CreateTranslation(new Vector3(-Main.screenPosition.X, -Main.screenPosition.Y, 0));
-            effect.Parameters["uTransform"].SetValue(model * projection);
+            effect.Parameters["uTransform"].SetValue(model * projection * scale);
             SwingHelper.Swing_TrailingDraw(ModAsset.Extra_4.Value, (_) => Color.White, effect);
             //projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, 0, 1);
             //model = Matrix.CreateTranslation(new Vector3(-Main.screenPosition.X, -Main.screenPosition.Y, 0));

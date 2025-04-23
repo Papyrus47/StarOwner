@@ -7,6 +7,7 @@
         {
             int slot = EquipLoader.GetEquipSlot(Mod, Name, EquipType.Legs);
             ArmorIDs.Legs.Sets.HidesTopSkin[slot] = true;
+            ArmorIDs.Legs.Sets.HidesBottomSkin[slot] = true;
         }
         public override void SetDefaults()
         {

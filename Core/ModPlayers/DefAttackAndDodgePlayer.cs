@@ -17,7 +17,7 @@ namespace StarOwner.Core.ModPlayers
         public override void ResetEffects()
         {
             if (defenseAttack > 0)
-                defenseAttack--;
+                defenseAttack -= 3;
             if (defenseCD > 0)
             {
                 for (int i = 0; i < defenseCD; i++)

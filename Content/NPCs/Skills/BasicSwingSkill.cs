@@ -1,4 +1,5 @@
-﻿using StarOwner.Core.ModPlayers;
+﻿using StarOwner.Content.NPCs.Particles;
+using StarOwner.Core.ModPlayers;
 using StarOwner.Core.SkillsNPC;
 using System;
 using System.Collections.Generic;
@@ -92,7 +93,7 @@ namespace StarOwner.Content.NPCs.Skills
             /// <summary>
             /// 额外更新次数
             /// </summary>
-            public int ExtraUpdate = 4;
+            public int ExtraUpdate = 6;
 
             public object Clone()
             {
@@ -142,11 +143,7 @@ namespace StarOwner.Content.NPCs.Skills
         }
         public override void AI()
         {
-            swingHelper ??= new(NPC, 30, DrawTex)
-            {
-                Size = Size,
-                frameMax = 1
-            };
+            NewSwingHelper();
             swingHelper.spriteDirection = NPC.spriteDirection * setting.SwingDirectionChange.ToDirectionInt();
             switch ((SwingType)NPC.ai[0])
             {
@@ -226,7 +223,7 @@ namespace StarOwner.Content.NPCs.Skills
                                 SoundEngine.PlaySound(SoundID.Item178.WithVolume(3).WithPitchOffset(0.2f), Target.Center);
                                 for (int j = 0; j < 40; j++)
                                 {
-                                    Dust dust = Dust.NewDustDirect(swingHelper.velocity * (j / 40f) + NPC.Center, 1, 1, DustID.FireworkFountain_Red);
+                                    Dust dust = Dust.NewDustDirect(swingHelper.velocity * (j / 40f) + swingHelper.Center, 1, 1, DustID.FireworkFountain_Red);
                                     dust.velocity = swingHelper.velocity.SafeNormalize(default).RotatedBy(MathHelper.PiOver2 * NPC.spriteDirection * setting.SwingDirectionChange.ToDirectionInt()) * (5 + j * 0.2f);
                                     dust.noGravity = true;
                                 }
@@ -242,6 +239,11 @@ namespace StarOwner.Content.NPCs.Skills
                             Player.HurtInfo hurtInfo = hurtModifiers.ToHurtInfo(WeaponDamage, Target.statDefense, Target.DefenseEffectiveness.Value, 0, true);
                             hurtInfo.DamageSource = PlayerDeathReason.ByNPC(NPC.whoAmI);
                             Target.Hurt(hurtInfo);
+                            for (int j = Main.rand.Next(5, 8); j > 0; j--)
+                            {
+                                HitPiecredExtra98 hitPiecredExtra98 = new(swingHelper.velocity.RotatedBy(MathHelper.PiOver2 * setting.SwingDirectionChange.ToDirectionInt() * NPC.spriteDirection) * 0.2f,Target.Center);
+                                Core.Particles.ParticlesSystem.AddParticle(Core.Particles.BasicParticle.DrawLayer.AfterDust, hitPiecredExtra98);
+                            }
                             Target.GetModPlayer<ControlPlayer>().StopControl = (int)Math.Log2(hurtInfo.Damage) * 10;
                             StarOwner.DamageAdd += 0.5f;
                             Target.immuneTime /= 3;
@@ -250,7 +252,7 @@ namespace StarOwner.Content.NPCs.Skills
                             if (AddStarPower)
                                 Target.GetModPlayer<StarPowerPlayer>().starPower.Value += WeaponDamage;
                             OnHitStopTime = setting.OnHitStopTime * (setting.ExtraUpdate + 1);
-                            Main.instance.CameraModifiers.Add(new PunchCameraModifier(Target.position, -Vector2.UnitX * Target.direction, MathF.Log2(hurtInfo.Damage) * 3, 60, (int)MathF.Log2(hurtInfo.Damage) * 3 + 1));
+                            Main.instance.CameraModifiers.Add(new PunchCameraModifier(Target.position, -Vector2.UnitX * Target.direction, MathF.Log2(hurtInfo.Damage), 60, 20));
                         }
                         #endregion
                     }
@@ -281,6 +283,15 @@ namespace StarOwner.Content.NPCs.Skills
             base.AI();
             StarOwner.drawPlayer.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, MathF.Atan2(swingHelper.velocity.Y * StarOwner.drawPlayer.direction, swingHelper.velocity.X * StarOwner.drawPlayer.direction) - MathHelper.PiOver2 * StarOwner.drawPlayer.direction);
         }
+        public virtual void NewSwingHelper()
+        {
+            swingHelper ??= new(NPC, 30, DrawTex)
+            {
+                Size = Size,
+                frameMax = 1
+            };
+        }
+
         public override bool SwitchCondition(NPCSkills changeToSkill) => NPC.ai[0] == (int)SwingType.PostSwing && NPC.ai[1] > postSwing.PostSwingTime;
         public override bool ActivationCondition(NPCSkills activeSkill) => setting.ChangeCondition.Invoke();
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
@@ -291,11 +302,7 @@ namespace StarOwner.Content.NPCs.Skills
         {
             base.OnSkillActive(activeSkill);
             ByDef = false;
-            swingHelper ??= new(NPC, 30, DrawTex)
-            {
-                Size = Size,
-                frameMax = 1
-            };
+            NewSwingHelper();
         }
     }
 }

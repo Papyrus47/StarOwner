@@ -14,20 +14,26 @@ namespace StarOwner.Core.Systems
         /// 缩放比例
         /// </summary>
         public static float ScreenScale = 1f;
+        public static float TargetScale = 1f;
         public override void ModifyScreenPosition()
         {
-            if(ScreenCenter != default)
+            if(BossAndDownedSystem.StarOwnerIndex != -1)
             {
-                Main.screenPosition = Vector2.Lerp(ScreenCenter - Main.ScreenSize.ToVector2() * 0.5f, Main.screenPosition,0.1f);
-                ScreenCenter = Vector2.Lerp(ScreenCenter,default,0.9f);
-                if (ScreenCenter.LengthSquared() < 1000000)
-                    ScreenCenter = default;
+                if(ScreenCenter == default)
+                    ScreenCenter = Vector2.Lerp(ScreenCenter, Main.LocalPlayer.Center, 0.99f);
+                Main.screenPosition = Vector2.Lerp(ScreenCenter - Main.ScreenSize.ToVector2() * 0.5f, Main.screenPosition,0.01f);
+                ScreenCenter = Vector2.Lerp(ScreenCenter,Main.LocalPlayer.Center,0.02f);
+                Main.instance.CameraModifiers.ApplyTo(ref ScreenCenter);
             }
         }
         public override void ModifyTransformMatrix(ref SpriteViewMatrix Transform)
         {
+            float targetScale = 1f;
+            if (BossAndDownedSystem.StarOwnerIndex != -1)
+                targetScale = 1.4f;
             Transform.Zoom *= ScreenScale;
-            ScreenScale += (1 - ScreenScale) * 0.1f;
+            ScreenScale += (TargetScale - ScreenScale) * 0.1f;
+            TargetScale += (targetScale - TargetScale) * 0.1f;
         }
     }
 }

@@ -31,26 +31,35 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
             {
                 NPC.velocity.Y = -7;
             }
-            if(disY > 200)
+            if(disY > 64)
             {
-                NPC.velocity.Y = -20;
+                NPC.velocity.Y = -disY * 0.2f;
                 NPC.noTileCollide = true;
             }
             else if (disY < -300) // 强制下降
             {
-                NPC.position.Y += 4;
+                NPC.position.Y += 16;
+                NPC.velocity.Y = 0;
             }
-            if (Main.tile[(NPC.Center / 16).ToPoint()].HasTile)
+            try
             {
-                NPC.position.Y -= 8;
-                NPC.noTileCollide = true;
+                Point point = (NPC.Center / 16).ToPoint();
+                if (Main.tile.Width > point.X && Main.tile.Height > point.Y)
+                {
+                    if (Main.tile[point].HasTile)
+                    {
+                        NPC.position.Y -= 8;
+                        NPC.noTileCollide = true;
+                    }
+                }
             }
+            catch { }
             NPC.rotation = 0;
             base.AI();
-            if (NPC.ai[0] > 65)
-                NPC.ai[0] = 40;
+            if (NPC.ai[0] > 25)
+                NPC.ai[0] = 10;
         }
-        public override bool SwitchCondition(NPCSkills changeToSkill) => NPC.ai[0] > 60;
+        public override bool SwitchCondition(NPCSkills changeToSkill) => NPC.ai[0] > 20;
         public override void OnSkillActive(NPCSkills activeSkill)
         {
             base.OnSkillActive(activeSkill);
