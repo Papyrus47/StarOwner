@@ -17,11 +17,20 @@ namespace StarOwner.Core.Systems
 
         public static int OnStrikeNPC(On_NPC.orig_StrikeNPC_HitInfo_bool_bool orig, NPC self, NPC.HitInfo hit, bool fromNet, bool noPlayerInteraction)
         {
-            if(self.ModNPC is StarOwnerNPC starOwnerNPC && starOwnerNPC.CurrentSkill is IDefenceAttack defenceAttack)
+            if(self.ModNPC is StarOwnerNPC starOwnerNPC)
             {
-                defenceAttack.DefenceSucceed = true;
-                defenceAttack.OnDefenceSucceed();
-                return 0;
+                if(hit.HitDirection == self.spriteDirection)
+                {
+                    hit.Damage += 5;
+                }
+                if (starOwnerNPC.CurrentSkill is IDefenceAttack defenceAttack)
+                {
+                    if (hit.HitDirection == self.spriteDirection || !defenceAttack.CanDefence())
+                        return orig.Invoke(self, hit, fromNet, noPlayerInteraction);
+                    defenceAttack.DefenceSucceed = true;
+                    defenceAttack.OnDefenceSucceed();
+                    return 0;
+                }
             }
             return orig.Invoke(self, hit, fromNet, noPlayerInteraction);
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StarOwner.QuickAssetReference;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,6 +22,8 @@ namespace StarOwner.Content.NPCs.Skills.General.BrokenStarsSlash
             Effect effect = ModAsset.StarOwnerSwingShader.Value;
             GraphicsDevice gd = Main.instance.GraphicsDevice;
             gd.Textures[1] = ModAsset.ColorMap_0.Value;
+            if (StarOwner.IsPhase(2))
+                gd.Textures[1] = ModAsset.ColorMap_2.Value;
             gd.Textures[2] = ModAsset.Stars.Value;
             Matrix projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, 0, 1);
             Matrix scale = Matrix.CreateScale(Main.GameViewMatrix.Zoom.Length() / MathF.Sqrt(2));

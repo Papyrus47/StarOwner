@@ -27,7 +27,7 @@ float4 SwingShader(PSInput input) : COLOR0
     float4 colorMap = tex2D(uImage1, uv);
     color *= 3;
     color *= colorMap;
-    if (color.r <= 0.4 && color.b <= 0.4 && color.g <= 0.4)
+    if (color.r <= 0.1 && color.b <= 0.1 && color.g <= 0.1)
     {
         float4 stars = tex2D(uImage2, uv);
         color = stars;

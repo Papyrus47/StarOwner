@@ -53,7 +53,7 @@ namespace StarOwner.Core.ModPlayers
             if (StarOwner.DefAtk.Current && defenseCD <= 0)
             {
                 defenseCD = 70;
-                defenseAttack = 30;
+                defenseAttack = 60;
             }
             if(StarOwner.DodgeDamage.Current && dodgeTimeCD <= 0)
             {

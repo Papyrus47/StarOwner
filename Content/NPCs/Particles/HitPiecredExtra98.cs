@@ -8,6 +8,7 @@ namespace StarOwner.Content.NPCs.Particles
 {
     public class HitPiecredExtra98 : BasicExtra98Particle
     {
+        public Vector2 gravity = new Vector2(0, 0.5f);
         public HitPiecredExtra98(Vector2 vel,Vector2 pos)
         {
             vel.Y = -15;
@@ -23,7 +24,7 @@ namespace StarOwner.Content.NPCs.Particles
             if (velocity.Length() > 10)
                 velocity = velocity.SafeNormalize(default) * 10;
             //velocity = velocity.RotatedByRandom(0.2);
-            velocity.Y += 0.5f;
+            velocity += gravity;
             rotation = velocity.ToRotation() + MathHelper.PiOver2;
             scale *= 0.9f;
         }

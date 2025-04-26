@@ -30,5 +30,9 @@ Bosses:{
 			Text13:...... Are you trying to have a duel?
 			Text14: Well, come on, come on, let's fight. I want to see why you are so persistent!
 		}
+		Phase2Text:{
+			Text1:Interesting, interesting. They actually beat me to death once.
+			Text2:This anger, you will be repaid twice as much. You will... You will!
+		}
 	}
 }

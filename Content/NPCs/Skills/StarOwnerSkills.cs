@@ -28,7 +28,7 @@ namespace StarOwner.Content.NPCs.Skills
         {
             base.OnSkillDeactivate(changeToSkill);
             SkillTimeOut = false;
-            NPC.ai[0] = NPC.ai[1] = NPC.ai[2] = NPC.ai[3] = 0;
+            //NPC.ai[0] = NPC.ai[1] = NPC.ai[2] = NPC.ai[3] = 0;
         }
         public override bool PreDraw(SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
@@ -45,6 +45,8 @@ namespace StarOwner.Content.NPCs.Skills
             StarOwner.drawPlayer.PlayerFrame();
             StarOwner.drawPlayer.head = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerHead", EquipType.Head);
             StarOwner.drawPlayer.body = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerBody", EquipType.Body);
+            if (StarOwner.IsPhase(2))
+                StarOwner.drawPlayer.body = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerBodyShow", EquipType.Body);
             StarOwner.drawPlayer.legs = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerLegs", EquipType.Legs);
         }
     }

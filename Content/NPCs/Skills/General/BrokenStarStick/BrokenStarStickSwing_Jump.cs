@@ -32,8 +32,8 @@ namespace StarOwner.Content.NPCs.Skills.General.BrokenStarStick
                     swingHelper.ProjFixedPos(NPC.Center);
                     swingHelper.SetSwingActive();
                     swingHelper.SwingAI(setting.SwingLenght, NPC.spriteDirection, 0f);
-                    preSwing.OnUse?.Invoke(this);
                     NPC.velocity.X = Math.Sign(Target.Center.X - NPC.Center.X) * 0.1f; // 改变速度
+                    preSwing.OnUse?.Invoke(this);
                     NPC.spriteDirection = NPC.direction = NPC.velocity.X > 0 ? 1 : -1;
 
                     if (NPC.collideX)

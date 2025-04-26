@@ -1,4 +1,5 @@
-﻿using StarOwner.Core.ModPlayers;
+﻿using StarOwner.Core.Cameras;
+using StarOwner.Core.ModPlayers;
 using StarOwner.Core.SkillsNPC;
 using StarOwner.Core.Systems;
 using System;
@@ -15,7 +16,10 @@ namespace StarOwner.Content.NPCs.Skills.General.BrokenStarsSlash
         public void OnDefenceSucceed() 
         {
             NPC.velocity.X = -NPC.spriteDirection * 8;
-            CameraSystem.ScreenCenter = NPC.Center;
+            Main.instance.CameraModifiers.Add(new MoveScreenCamera(40, NPC.Center)
+            {
+                amount = 0.3f
+            });
             CameraSystem.TargetScale = 4;
             SoundEngine.PlaySound(SoundID.Item178.WithVolume(3).WithPitchOffset(-0.2f), NPC.Center);
             for (int i = 0; i < setting.SwingLenght; i++)

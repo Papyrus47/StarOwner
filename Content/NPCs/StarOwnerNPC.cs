@@ -9,6 +9,11 @@ using StarOwner.Content.NPCs.Skills.General.SkinningAndBrokenBones.Change;
 using StarOwner.Content.NPCs.Skills.General.SkinningAndBrokenBones.NoChange;
 using StarOwner.Content.NPCs.Skills.General.StarPierced;
 using StarOwner.Content.NPCs.Skills.Phase1;
+using StarOwner.Content.NPCs.Skills.Phase2;
+using StarOwner.Content.NPCs.Skills.Phase2.BrokenStarsSlashChange;
+using StarOwner.Content.NPCs.Skills.Phase2.BrokenStarStickWhip;
+using StarOwner.Content.NPCs.Skills.Phase2.WalkerOfRain;
+using StarOwner.Core.Cameras;
 using StarOwner.Core.ModPlayers;
 using StarOwner.Core.SkillsNPC;
 using StarOwner.Core.SPBuffs;
@@ -18,13 +23,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Terraria.ModLoader.IO;
 using static StarOwner.Content.NPCs.Skills.BasicSwingSkill;
 
 namespace StarOwner.Content.NPCs
 {
     public class StarOwnerNPC : BasicSkillNPC
     {
+        public static bool Phase1Said;
         public const string Phase1Text = "Mods.StarOwner.Bosses.StarOwner.Phase1Text";
+        public const string Phase2Text = "Mods.StarOwner.Bosses.StarOwner.Phase2Text";
         public Player drawPlayer;
         public Player TargetPlayer
         {
@@ -47,6 +55,11 @@ namespace StarOwner.Content.NPCs
         /// 斧强化
         /// </summary>
         public bool InStrongAxeMode;
+        /// <summary>
+        /// 是否为强化攻击
+        /// </summary>
+        public int IsStrongBrokenStarsSlashTime;
+        public bool IsStrongBrokenStarsSlash => IsStrongBrokenStarsSlashTime > 0;
         public static float ClosePlayer => 15 * 16;
         public static float FarPlayer => 30 * 16;
         public Walk1 walk1;
@@ -55,6 +68,10 @@ namespace StarOwner.Content.NPCs
         /// </summary>
         public int byDefAtk;
         public StarPower starPower = new();
+        public bool ChangeMode;
+
+        public Phase2Start phase2Start;
+
         public override void SetStaticDefaults()
         {
             base.SetStaticDefaults();
@@ -62,6 +79,14 @@ namespace StarOwner.Content.NPCs
         public override void Load()
         {
             //TheUtility.RegisterText(Phase1Text);
+        }
+        public override void SaveData(TagCompound tag)
+        {
+            tag.Add(nameof(Phase1Said), Phase1Said);
+        }
+        public override void LoadData(TagCompound tag)
+        {
+            Phase1Said = tag.GetBool(nameof(Phase1Said));
         }
         public override void SetDefaults()
         {
@@ -81,9 +106,20 @@ namespace StarOwner.Content.NPCs
         {
             if(starPower.Value > 0)
             {
-                starPower.Value--;
-                NPC.life += 350;
+                starPower.Value = 0;
+                NPC.life = 350;
                 NPC.HealEffect(350);
+                NPC.active = true;
+                return false;
+            }
+            if (IsPhase(1))
+            {
+                ChangeMode = true;
+                CurrentSkill.OnSkillDeactivate(phase2Start);
+                phase2Start.OnSkillActive(CurrentSkill);
+                OldSkills.Clear();
+                CurrentSkill = phase2Start;
+                NPC.life = NPC.lifeMax;
                 NPC.active = true;
                 return false;
             }
@@ -108,7 +144,14 @@ namespace StarOwner.Content.NPCs
         }
         public override void AI()
         {
-            if(NPC.lifeMax > 1000)
+
+            //if (NPC.justHit)
+            //{
+            //    NPC.life = 1;
+            //}
+            if (IsStrongBrokenStarsSlashTime > 0)
+                IsStrongBrokenStarsSlashTime--;
+            if (NPC.lifeMax > 1000)
             {
                 NPC.life = NPC.lifeMax = 1000;
             }
@@ -144,12 +187,13 @@ namespace StarOwner.Content.NPCs
             drawPlayer = new Player();
             #region 注册
             SO_Phase1 phase1 = new(NPC);
+            SO_Phase2 phase2 = new(NPC);
 
-            #region 一阶段
+            #region 一阶段与二阶段通用
             Phase1Start phase1Start = new(NPC);
             walk1 = new(NPC);
 
-            NoAtk noAtk_1 = new(NPC,5);
+            NoAtk noAtk = new(NPC, 5);
 
             RandomSkillMax = 6;
             float BS_Length = new Vector2(76, 74).Length();
@@ -157,12 +201,12 @@ namespace StarOwner.Content.NPCs
             float BSS_Length = new Vector2(230).Length();
             float Skinning_Length = new Vector2(54, 42).Length();
             float BB_Length = new Vector2(74, 68).Length();
-            float BBC_Length = new Vector2(86,84).Length();
-            Skills.BasicSwingSkill.PreSwing LongPreTime = new()
+            float BBC_Length = new Vector2(86, 84).Length();
+            PreSwing LongPreTime = new()
             {
                 PreSwingTime = 15
             };
-            Skills.BasicSwingSkill.PreSwing ShortPreTime = new()
+            PreSwing ShortPreTime = new()
             {
                 PreSwingTime = 7
             };
@@ -177,7 +221,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     StartVel = -Vector2.UnitY.RotatedBy(-0.4),
@@ -185,7 +229,7 @@ namespace StarOwner.Content.NPCs
                     VelScale = new Vector2(1, 0.8f),
                     VisualRotation = -0.2f,
                     OnHitStopTime = 5,
-                    ChangeCondition = () => DisTarget() < ClosePlayer && NPC.collideY,
+                    ChangeCondition = () => DisTarget() < ClosePlayer && NPC.collideY && !IsStrongBrokenStarsSlash,
                     SwingLenght = BS_Length
                 });
             BrokenStarsSlashSwing BS_combo1_2 = new(NPC,
@@ -197,7 +241,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 1.2f,
@@ -219,7 +263,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 2f,
@@ -249,7 +293,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 3f,
@@ -271,7 +315,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 7f,
@@ -293,7 +337,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 5f,
@@ -323,7 +367,7 @@ namespace StarOwner.Content.NPCs
                            NPC.velocity *= 0.5f;
                        }
                    },
-                   OnChange = (_)=>
+                   OnChange = (_) =>
                    {
                        NPC.velocity.X = Math.Sign((TargetPlayer.Center - NPC.Center).X) * 20;
                        NPC.spriteDirection = NPC.direction = Math.Sign((TargetPlayer.Center - NPC.Center).X);
@@ -333,14 +377,14 @@ namespace StarOwner.Content.NPCs
                {
                    SwingTime = 15,
                    SwingTimeChange = GeneralSwing,
-                   OnChange =(_)=>
+                   OnChange = (_) =>
                    {
                        NPC.velocity.X *= 0.02f;
                    }
                }, new()
                {
                    PostSwingTime = 10,
-                   PostSwingTimeMax = 60
+                   PostSwingTimeMax = 20
                }, new()
                {
                    ActionDmg = 11f,
@@ -350,7 +394,7 @@ namespace StarOwner.Content.NPCs
                    VisualRotation = 0f,
                    OnHitStopTime = 5,
                    SwingDirectionChange = true,
-                   ChangeCondition = () => DisTarget() > ClosePlayer && DisTarget() < FarPlayer && Main.rand.NextBool(5) && NPC.collideY,
+                   ChangeCondition = () => DisTarget() > ClosePlayer && DisTarget() < FarPlayer && Main.rand.NextBool(5) && NPC.collideY && !IsStrongBrokenStarsSlash,
                    SwingLenght = BS_Length
                });
             BrokenStarsSlashSwing BS_TenCharSlash_2 = new(NPC,
@@ -362,7 +406,7 @@ namespace StarOwner.Content.NPCs
                }, new()
                {
                    PostSwingTime = 10,
-                   PostSwingTimeMax = 60
+                   PostSwingTimeMax = 20
                }, new()
                {
                    ActionDmg = 1.2f,
@@ -390,7 +434,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 3f,
@@ -400,7 +444,7 @@ namespace StarOwner.Content.NPCs
                     VisualRotation = 0f,
                     OnHitStopTime = 5,
                     SwingDirectionChange = false,
-                    ChangeCondition = () => DisTarget() < ClosePlayer && Main.rand.NextBool(18) && NPC.collideY,
+                    ChangeCondition = () => DisTarget() < ClosePlayer && Main.rand.NextBool(18) && NPC.collideY && !IsStrongBrokenStarsSlash,
                     SwingLenght = BS_Length
                 });
             #endregion
@@ -420,10 +464,10 @@ namespace StarOwner.Content.NPCs
                     OnUse = (_) =>
                     {
                         NPC.velocity.Y = 30;
-                        if(!NPC.collideY)
+                        if (!NPC.collideY)
                             NPC.noGravity = true;
                     },
-                    OnChange= (_) =>
+                    OnChange = (_) =>
                     {
                         NPC.noGravity = false;
                     },
@@ -431,7 +475,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 20f,
@@ -441,7 +485,7 @@ namespace StarOwner.Content.NPCs
                     VisualRotation = 0f,
                     OnHitStopTime = 5,
                     SwingDirectionChange = true,
-                    ChangeCondition = () => !NPC.collideY,
+                    ChangeCondition = () => !NPC.collideY && !IsStrongBrokenStarsSlash,
                     SwingLenght = BS_Length
                 })
             {
@@ -458,7 +502,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 1f,
@@ -468,7 +512,7 @@ namespace StarOwner.Content.NPCs
                     VisualRotation = -0.8f,
                     OnHitStopTime = 5,
                     SwingDirectionChange = true,
-                    ChangeCondition = () => Main.rand.NextBool(4) && NPC.collideY,
+                    ChangeCondition = () => Main.rand.NextBool(4) && NPC.collideY && !IsStrongBrokenStarsSlash,
                     SwingLenght = BS_Length
                 });
             BrokenStarsSlashSwing BS_DefSlash = new(NPC,
@@ -489,7 +533,7 @@ namespace StarOwner.Content.NPCs
                    }, new()
                    {
                        PostSwingTime = 10,
-                       PostSwingTimeMax = 60
+                       PostSwingTimeMax = 20
                    }, new()
                    {
                        ActionDmg = 10f,
@@ -524,7 +568,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 5,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     StartVel = Vector2.UnitY.RotatedBy(0.4),
@@ -544,7 +588,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 5,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     StartVel = -Vector2.UnitY.RotatedBy(-0.4),
@@ -577,7 +621,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 25,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     StartVel = -Vector2.UnitY.RotatedBy(-0.4),
@@ -588,7 +632,7 @@ namespace StarOwner.Content.NPCs
                     ChangeCondition = () => DisTarget() < FarPlayer && Main.rand.NextBool(2) && NPC.collideY,
                     SwingLenght = SP_Length
                 });
-            StarPiercedCoiledSpurt SP_combo3_2 = new(NPC, () => Vector2.UnitX * NPC.spriteDirection * SP_Length * 0.25f, () => DisTarget() < ClosePlayer,20)
+            StarPiercedCoiledSpurt SP_combo3_2 = new(NPC, () => Vector2.UnitX * NPC.spriteDirection * SP_Length * 0.25f, () => DisTarget() < ClosePlayer, 20)
             {
                 ChangeTime = 15,
                 ActionDmg = 0.3f,
@@ -599,21 +643,21 @@ namespace StarOwner.Content.NPCs
                 ActionDmg = 4f,
                 OnUse = (skill) =>
                 {
-                    if(skill.ByDef && (int)NPC.ai[2] == 0)
+                    if (skill.ByDef && (int)NPC.ai[2] == 0)
                     {
                         NPC.ai[2]++;
                         NPC.velocity.X = -NPC.spriteDirection;
                     }
-                    if((int)NPC.ai[0] == skill.ChangeTime + 2 && NPC.ai[1] < 30)
+                    if ((int)NPC.ai[0] == skill.ChangeTime + 2 && NPC.ai[1] < 30)
                     {
                         NPC.velocity.X = NPC.spriteDirection * 25;
                         NPC.ai[1]++;
                         NPC.ai[0]--;
-                        for (int i = 0; i < 110; i++)
-                        {
-                            Dust dust = Dust.NewDustPerfect(NPC.Center, DustID.PinkFairy, skill.vel.SafeNormalize(default) * i * 0.25f);
-                            dust.noGravity = true;
-                        }
+                        //for (int i = 0; i < 110; i++)
+                        //{
+                        //    Dust dust = Dust.NewDustPerfect(NPC.Center, DustID.PinkFairy, skill.vel.SafeNormalize(default) * i * 0.25f);
+                        //    dust.noGravity = true;
+                        //}
                     }
                     else
                     {
@@ -651,7 +695,7 @@ namespace StarOwner.Content.NPCs
             #endregion
             #endregion
             #region 癫疯与恐惧
-            MadnessAndFearNormalShoot madnessAndFearNormalShoot = new(NPC,() => DisTarget() > ClosePlayer && Main.rand.NextBool(RandomSkillMax * 5));
+            MadnessAndFearNormalShoot madnessAndFearNormalShoot = new(NPC, () => DisTarget() > ClosePlayer && Main.rand.NextBool(RandomSkillMax * 5));
             MadnessAndFearFullShot madnessAndFearFullShot = new(NPC, () => DisTarget() > FarPlayer);
             #endregion
             #region 断星棍
@@ -664,7 +708,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 1f,
@@ -686,7 +730,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 2f,
@@ -708,7 +752,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 4f,
@@ -730,7 +774,7 @@ namespace StarOwner.Content.NPCs
                     }, new()
                     {
                         PostSwingTime = 10,
-                        PostSwingTimeMax = 60
+                        PostSwingTimeMax = 20
                     }, new()
                     {
                         ActionDmg = 5f,
@@ -760,7 +804,7 @@ namespace StarOwner.Content.NPCs
                     }, new()
                     {
                         PostSwingTime = 10,
-                        PostSwingTimeMax = 60
+                        PostSwingTimeMax = 20
                     }, new()
                     {
                         ActionDmg = 5f,
@@ -807,7 +851,18 @@ namespace StarOwner.Content.NPCs
             #endregion
             #region 蜻蜓点水
             BrokenStarStickSwing_Jump BSS_Jump_DragonflySkimmingTheWater = new(NPC,
-                LongPreTime,
+                new()
+                {
+                    PreSwingTime = 2,
+                    OnUse = (_) =>
+                    {
+                        NPC.velocity.X = (TargetPlayer.Center.X - NPC.Center.X) / 2;
+                    },
+                    OnChange = (_) =>
+                    {
+                        NPC.velocity.X *= 0.01f;
+                    }
+                },
                 new()
                 {
                     SwingTime = 15,
@@ -820,7 +875,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 10f,
@@ -842,14 +897,14 @@ namespace StarOwner.Content.NPCs
                 {
                     SwingTime = 45,
                     SwingTimeChange = GeneralSwing,
-                    onHit = (target,_)=>
+                    onHit = (target, _) =>
                     {
                         target.GetModPlayer<ControlPlayer>().StopControl *= 2;
                     }
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 20f,
@@ -875,11 +930,11 @@ namespace StarOwner.Content.NPCs
                 {
                     SwingTime = 15,
                     SwingTimeChange = GeneralSwing,
-                    modifyHit = (Player _,ref Player.HurtModifiers hurt)=> hurt.SourceDamage *= 3
+                    modifyHit = (Player _, ref Player.HurtModifiers hurt) => hurt.SourceDamage *= 3
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 2f,
@@ -908,7 +963,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 2f,
@@ -932,7 +987,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 2f,
@@ -955,7 +1010,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 2f,
@@ -978,7 +1033,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 2f,
@@ -1004,7 +1059,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 15f,
@@ -1021,9 +1076,9 @@ namespace StarOwner.Content.NPCs
                 OnBiting = (skill) =>
                 {
                     var rect = TargetPlayer.getRect();
-                    if(skill.Bite1.GetColliding(rect) || skill.Bite2.GetColliding(rect))
+                    if (skill.Bite1.GetColliding(rect) || skill.Bite2.GetColliding(rect))
                     {
-                        if(TargetPlayer.immune)
+                        if (TargetPlayer.immune)
                         {
                             return;
                         }
@@ -1061,7 +1116,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 15f,
@@ -1080,7 +1135,7 @@ namespace StarOwner.Content.NPCs
                     var rect = TargetPlayer.getRect();
                     if (skill.Bite1.GetColliding(rect) || skill.Bite2.GetColliding(rect))
                     {
-                        if(skill.hitNum >= 15)
+                        if (skill.hitNum >= 15)
                         {
                             skill.CanChange = true;
                             return;
@@ -1147,7 +1202,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 5f,
@@ -1176,7 +1231,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 10f,
@@ -1203,7 +1258,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 10f,
@@ -1216,7 +1271,7 @@ namespace StarOwner.Content.NPCs
                     ChangeCondition = () => true,
                     SwingLenght = BBC_Length
                 });
-            BrokenBonesChangeSwing BBC_BrokenBonesSlashSoul_3 = new(NPC, 
+            BrokenBonesChangeSwing BBC_BrokenBonesSlashSoul_3 = new(NPC,
                 LongPreTime,
                 new()
                 {
@@ -1230,7 +1285,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 30f,
@@ -1258,7 +1313,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 4f,
@@ -1285,7 +1340,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 5f,
@@ -1311,7 +1366,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 7f,
@@ -1337,7 +1392,7 @@ namespace StarOwner.Content.NPCs
                 }, new()
                 {
                     PostSwingTime = 10,
-                    PostSwingTimeMax = 60
+                    PostSwingTimeMax = 20
                 }, new()
                 {
                     ActionDmg = 10f,
@@ -1354,11 +1409,457 @@ namespace StarOwner.Content.NPCs
             #endregion
             #endregion
             #endregion
+            #region 二阶段
+            phase2Start = new Phase2Start(NPC);
+            float WOR_Lenght = new Vector2(26, 86).Length();
+            float WOR_Open_Lenght = new Vector2(78, 86).Length();
+            #region 雨中行者
+            WalkerOfRainSwing WOR_Combo1_1 = new(NPC,
+                ShortPreTime,
+                new()
+                {
+                    SwingTime = 5,
+                    SwingTimeChange = GeneralSwing,
+                    OnChange = (skill) =>
+                    {
+                        StarPiecredExtra98 starPiecredExtra98 = new(NPC.velocity, NPC.Center + NPC.velocity)
+                        {
+                            color = Color.Silver
+                        };
+                        Core.Particles.ParticlesSystem.AddParticle(Core.Particles.BasicParticle.DrawLayer.AfterDust, starPiecredExtra98);
+                    }
+                }, new()
+                {
+                    PostSwingTime = 10,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1.2f,
+                    StartVel = -Vector2.UnitY,
+                    SwingRot = MathHelper.PiOver2,
+                    VelScale = new Vector2(1, 0.2f) * 1.2f,
+                    VisualRotation = 0f,
+                    OnHitStopTime = 5,
+                    SwingDirectionChange = true,
+                    ChangeCondition = () => DisTarget() < ClosePlayer && NPC.collideY && IsPhase(2) && Main.rand.NextBool(RandomSkillMax),
+                    SwingLenght = WOR_Lenght
+                });
+            WalkerOfRainSwing WOR_Combo1_2 = new(NPC,
+                ShortPreTime,
+                new()
+                {
+                    SwingTime = 10,
+                    SwingTimeChange = GeneralSwing,
+                    OnChange = (skill) =>
+                    {
+                    }
+                }, new()
+                {
+                    PostSwingTime = 4,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1.5f,
+                    StartVel = -Vector2.UnitY.RotatedBy(0.4),
+                    SwingRot = MathHelper.Pi,
+                    VelScale = new Vector2(1, 0.8f),
+                    VisualRotation = 0f,
+                    OnHitStopTime = 5,
+                    SwingDirectionChange = true,
+                    ChangeCondition = () => DisTarget() < ClosePlayer && NPC.collideY,
+                    SwingLenght = WOR_Lenght
+                });
+            WalkerOfRainSwing WOR_Combo1_3 = new(NPC,
+                ShortPreTime,
+                new()
+                {
+                    SwingTime = 10,
+                    SwingTimeChange = GeneralSwing,
+                    OnChange = (skill) =>
+                    {
+                    }
+                }, new()
+                {
+                    PostSwingTime = 4,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1.5f,
+                    StartVel = Vector2.UnitY.RotatedBy(-0.4),
+                    SwingRot = MathHelper.Pi,
+                    VelScale = new Vector2(1, 1f),
+                    VisualRotation = 0f,
+                    OnHitStopTime = 5,
+                    SwingDirectionChange = false,
+                    ChangeCondition = () => DisTarget() < ClosePlayer && NPC.collideY,
+                    SwingLenght = WOR_Lenght
+                });
+            WalkerOfRainSwing WOR_Combo1_4 = new(NPC,
+                ShortPreTime,
+                new()
+                {
+                    SwingTime = 5,
+                    SwingTimeChange = GeneralSwing,
+                    OnChange = (skill) =>
+                    {
+                        StarPiecredExtra98 starPiecredExtra98 = new(NPC.velocity, NPC.Center + NPC.velocity)
+                        {
+                            color = Color.Silver
+                        };
+                        Core.Particles.ParticlesSystem.AddParticle(Core.Particles.BasicParticle.DrawLayer.AfterDust, starPiecredExtra98);
+                    }
+                }, new()
+                {
+                    PostSwingTime = 10,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1f,
+                    StartVel = -Vector2.UnitY,
+                    SwingRot = MathHelper.PiOver2,
+                    VelScale = new Vector2(1, 0.2f) * 1.2f,
+                    VisualRotation = 0f,
+                    OnHitStopTime = 5,
+                    SwingDirectionChange = true,
+                    ChangeCondition = () => DisTarget() < ClosePlayer && NPC.collideY, // 测试，记得加上Main.rand.NextBool()
+                    SwingLenght = WOR_Lenght
+                });
+            WalkerOfRainSwing WOR_Combo1_5 = new(NPC,
+                new()
+                {
+                    PreSwingTime = 20,
+                    OnChange = WalkerOfRain_Boom
+                },
+                new()
+                {
+                    SwingTime = 5,
+                    SwingTimeChange = GeneralSwing,
+                }, new()
+                {
+                    PostSwingTime = 10,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1f,
+                    StartVel = Vector2.UnitX,
+                    SwingRot = MathHelper.PiOver2,
+                    VelScale = new Vector2(1, 1f),
+                    VisualRotation = 0f,
+                    OnHitStopTime = 5,
+                    SwingDirectionChange = false,
+                    ChangeCondition = () => DisTarget() < ClosePlayer * 2 && NPC.collideY, // 测试，记得加上Main.rand.NextBool()
+                    SwingLenght = WOR_Lenght
+                })
+            {
+                CanDef = false
+            };
+            WalkerOfRainSwing WOR_Combo2_1 = new(NPC,
+                ShortPreTime,
+                new()
+                {
+                    SwingTime = 5,
+                    SwingTimeChange = GeneralSwing
+                }, new()
+                {
+                    PostSwingTime = 10,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1.5f,
+                    StartVel = Vector2.UnitY.RotatedBy(0.4),
+                    SwingRot = MathHelper.Pi + 0.8f,
+                    VelScale = new Vector2(1, 0.2f) * 1.2f,
+                    VisualRotation = 0f,
+                    OnHitStopTime = 5,
+                    SwingDirectionChange = false,
+                    ChangeCondition = () => DisTarget() < ClosePlayer && NPC.collideY && Main.rand.NextBool(), // 测试，记得加上Main.rand.NextBool()
+                    SwingLenght = WOR_Lenght
+                });
+            WalkerOfRainSwing WOR_Combo2_2 = new(NPC,
+                ShortPreTime,
+                new()
+                {
+                    SwingTime = 5,
+                    SwingTimeChange = GeneralSwing
+                }, new()
+                {
+                    PostSwingTime = 10,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1.5f,
+                    StartVel = Vector2.UnitY.RotatedBy(0.4),
+                    SwingRot = MathHelper.Pi + 0.8f,
+                    VelScale = new Vector2(1, 1f),
+                    VisualRotation = 0f,
+                    OnHitStopTime = 5,
+                    SwingDirectionChange = false,
+                    ChangeCondition = () => DisTarget() < ClosePlayer && NPC.collideY, // 测试，记得加上Main.rand.NextBool()
+                    SwingLenght = WOR_Lenght
+                });
+            WalkerOfRainSwing WOR_Open = new(NPC,
+               new()
+               {
+                   PreSwingTime = 30,
+                   OnUse = (_) =>
+                   {
+                       Main.instance.CameraModifiers.Add(new MoveScreenCamera(30, NPC.Center)
+                       {
+                           amount = 1 / 20f
+                       });
+                   }
+               },
+                new()
+                {
+                    SwingTime = 180,
+                    SwingTimeChange = GeneralSwing,
+                    OnUse = (skill) =>
+                    {
+                        if (DisTarget() < ClosePlayer * 0.85f)
+                        {
+                            if (NPC.ai[3]-- <= 0)
+                            {
+                                NPC.ai[3] = 80;
+                                WalkerOfRain_Boom(skill);
+                            }
+                            NPC.velocity.X *= 0.99f;
+                        }
+                        else if (Math.Abs(NPC.velocity.X) < 2)
+                            NPC.velocity.X += NPC.spriteDirection * 0.5f;
+                        else
+                            NPC.velocity.X *= 0.8f;
+                        if (DisTarget() > ClosePlayer * 1.25f)
+                            NPC.spriteDirection = Math.Sign(TargetPlayer.Center.X - NPC.Center.X);
+                    }
+                }, new()
+                {
+                    PostSwingTime = 10,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1.5f,
+                    StartVel = Vector2.UnitX,
+                    SwingRot = 0,
+                    VelScale = new Vector2(1, 1f),
+                    VisualRotation = 0f,
+                    OnHitStopTime = 5,
+                    SwingDirectionChange = false,
+                    ChangeCondition = () => Main.rand.NextBool(18) && NPC.collideY && IsPhase(2), // 测试，记得加上Main.rand.NextBool()
+                    SwingLenght = WOR_Open_Lenght
+                })
+            {
+                IsOpen = true,
+                CanDef = false
+            };
+            #endregion
+            #region 破星之斩-追加
+            BrokenStarsSlashChangeSwing BS_Change_Show = new(NPC,
+                LongPreTime,
+                new()
+                {
+                    SwingTime = 20,
+                    OnUse = (_) =>
+                    {
+                        NPC.velocity.X = 0;
+                        Main.instance.CameraModifiers.Add(new MoveScreenCamera(20, NPC.Center, "BS_Change_Show")
+                        {
+                            amount = 0.85f
+                        });
+                    },
+                    SwingTimeChange = (time) => time,
+                    OnChange = (_) =>
+                    {
+                        IsStrongBrokenStarsSlashTime = starPower.Value * 10;
+                        starPower.Value = 0;
+                    }
+                }, new()
+                {
+                    PostSwingTime = 50,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 0f,
+                    StartVel = Vector2.UnitY,
+                    SwingRot = MathHelper.Pi,
+                    VelScale = new Vector2(1, 1f),
+                    VisualRotation = 0f,
+                    OnHitStopTime = 0,
+                    SwingDirectionChange = true,
+                    ChangeCondition = () => starPower.Value > 0 && DisTarget() < ClosePlayer * 2 && IsPhase(2) && Main.rand.NextBool((int)(FarPlayer / (DisTarget() + 1)) + 1) && NPC.collideY && !IsStrongBrokenStarsSlash,
+                    SwingLenght = BS_Length
+                })
+            {
+                CanDef = false
+            };
+            #region 基础Combo
+            BrokenStarsSlashChangeSwing BS_ChangeCombo_1 = new(NPC,
+                LongPreTime,
+                new()
+                {
+                    SwingTime = 15,
+                    SwingTimeChange = GeneralSwing
+                }, new()
+                {
+                    PostSwingTime = 10,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    StartVel = -Vector2.UnitY.RotatedBy(-0.4),
+                    SwingRot = MathHelper.Pi + 0.8f,
+                    VelScale = new Vector2(1, 0.8f),
+                    VisualRotation = -0.2f,
+                    OnHitStopTime = 5,
+                    ChangeCondition = () => DisTarget() < ClosePlayer && NPC.collideY && IsStrongBrokenStarsSlash,
+                    SwingLenght = BS_Length
+                });
+            BrokenStarsSlashChangeSwing BS_ChangeCombo_2 = new(NPC,
+                LongPreTime,
+                new()
+                {
+                    SwingTime = 15,
+                    SwingTimeChange = GeneralSwing
+                }, new()
+                {
+                    PostSwingTime = 10,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1.2f,
+                    StartVel = Vector2.UnitY.RotatedBy(0.4),
+                    SwingRot = MathHelper.Pi + 0.8f,
+                    VelScale = new Vector2(1, 0.2f) * 1.2f,
+                    VisualRotation = -0.8f,
+                    OnHitStopTime = 5,
+                    SwingDirectionChange = false,
+                    ChangeCondition = () => DisTarget() < ClosePlayer && NPC.collideY,
+                    SwingLenght = BS_Length
+                });
+            BrokenStarsSlashChangeSwing BS_ChangeCombo_3 = new(NPC,
+                LongPreTime,
+                new()
+                {
+                    SwingTime = 15,
+                    SwingTimeChange = GeneralSwing
+                }, new()
+                {
+                    PostSwingTime = 10,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 2f,
+                    StartVel = -Vector2.UnitY.RotatedBy(-0.4),
+                    SwingRot = MathHelper.Pi + 0.8f,
+                    VelScale = new Vector2(1, 1f) * 1.1f,
+                    VisualRotation = 0f,
+                    OnHitStopTime = 5,
+                    SwingDirectionChange = true,
+                    ChangeCondition = () => DisTarget() < ClosePlayer && NPC.collideY,
+                    SwingLenght = BS_Length
+                });
+            #endregion
+            #region 十字斩·改
+            BrokenStarsSlashChangeSwing BS_ChangeTenCharSlash_1 = new(NPC,
+                LongPreTime,
+                new()
+                {
+                    SwingTime = 15,
+                    SwingTimeChange = GeneralSwing,
+                    OnUse = (_) =>
+                    {
+                        NPC.velocity.X = NPC.spriteDirection * 10;
+                        Main.instance.CameraModifiers.Add(new MoveScreenCamera(10, (NPC.Center + TargetPlayer.Center) / 2, "BS_ChangeTenCharSlash_1")
+                        {
+                            amount = 0.95f
+                        });
+                    },
+                    OnChange = (_) =>
+                    {
+                        NPC.velocity.X *= 0.1f;
+                    },
+                }, new()
+                {
+                    PostSwingTime = 10,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 7,
+                    StartVel = Vector2.UnitY.RotatedBy(0.4),
+                    SwingRot = MathHelper.Pi + 0.8f,
+                    VelScale = new Vector2(1, 1f),
+                    VisualRotation = 0f,
+                    OnHitStopTime = 5,
+                    SwingDirectionChange = false,
+                    ChangeCondition = () => Main.rand.NextBool(5) && IsStrongBrokenStarsSlash,
+                    SwingLenght = BS_Length
+                })
+            {
+                shouldHit = 10
+            };
+            BrokenStarsSlashChangeSwing BS_ChangeTenCharSlash_2 = new(NPC,
+                new()
+                {
+                    PreSwingTime = 1,
+                    OnChange = (_) =>
+                    {
+                        NPC.position.X = TargetPlayer.Center.X + NPC.spriteDirection * 250;
+                        NPC.position.Y = TargetPlayer.position.Y;
+                        NPC.spriteDirection = (TargetPlayer.Center.X - NPC.Center.X) > 0 ? 1 : -1;
+                    }
+                },
+                new()
+                {
+                    SwingTime = 15,
+                    SwingTimeChange = GeneralSwing,
+                    OnUse = (_) =>
+                    {
+                        NPC.velocity.X = NPC.spriteDirection * 20;
+                        NPC.velocity.Y = -0.002f;
+                        Main.instance.CameraModifiers.Add(new MoveScreenCamera(10, (NPC.Center + TargetPlayer.Center) / 2, "BS_ChangeTenCharSlash_2")
+                        {
+                            amount = 0.95f
+                        });
+                    },
+                    OnChange = (_) =>
+                    {
+                        NPC.velocity.X *= 0.1f;
+                    },
+                }, new()
+                {
+                    PostSwingTime = 10,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 7,
+                    StartVel = -Vector2.UnitY.RotatedBy(-0.4),
+                    SwingRot = MathHelper.Pi + 0.8f,
+                    VelScale = new Vector2(1, 0.2f),
+                    VisualRotation = -0.8f,
+                    OnHitStopTime = 5,
+                    SwingDirectionChange = true,
+                    ChangeCondition = () => true,
+                    SwingLenght = BS_Length
+                })
+            {
+                shouldHit = 10
+            };
+            #endregion
+            #endregion
+            #region 断星棍-追加
+            BrokenStarStickWhipSwing BSS_Whip_Combo_1 = new(
+                NPC, BrokenStarStickWhipSwing.HeldType.Middle, -Vector2.UnitY.RotatedBy(-0.4f), MathHelper.TwoPi + 0.8f,
+                30f, true, () => IsPhase(2) && NPC.collideY && Main.rand.NextBool(RandomSkillMax))
+            {
+                ScaleY = 0.7f
+            };
+            BrokenStarStickWhipSwing BSS_Whip_Combo_2 = new(NPC, BrokenStarStickWhipSwing.HeldType.Tail, -Vector2.UnitY.RotatedBy(-0.4f), MathHelper.Pi + 0.4f, 10f, true, () => true);
+            BrokenStarStickWhipSwing BSS_Whip_Combo_3 = new(NPC, BrokenStarStickWhipSwing.HeldType.Tail, -Vector2.UnitY.RotatedBy(-0.4f), MathHelper.Pi + 0.8f, 4f, true, () => true);
+            #endregion
+            #endregion
             #endregion
 
             #region 登记
-            SkillNPC.Register(phase1);
-            SkillNPC.Register(phase1Start,walk1, noAtk_1);
+            SkillNPC.Register(phase1,phase2);
+            SkillNPC.Register(phase1Start, walk1, noAtk);
             SkillNPC.Register(BS_combo1_1, BS_combo1_2, BS_combo1_3, BS_combo2_1, BS_combo2_2, BS_combo3,
                               BS_TenCharSlash_1, BS_TenCharSlash_2, BS_SlashUp, BS_StarFall, SP_combo1_1, SP_combo1_2,
                               SP_combo2_1, SP_combo2_2, SP_combo2_3, SP_combo3_1, SP_combo3_2, SP_combo4, SP_YiyaDash,
@@ -1367,23 +1868,48 @@ namespace StarOwner.Content.NPCs
                               BSS_Jump_DragonflySkimmingTheWater_After, BS_Def, BS_DefSlash, skinning_NThorw,
                               BB_PursuitSlash, BB_NCombo_1, BB_NCombo_2, BB_NCombo_3, BBC_Biting, BBC_ArroganceBiting,
                               BBC_ArroganceBiting_End, BBC_BrokenBonesSlashSoul_1, BBC_BrokenBonesSlashSoul_2,
-                              BBC_BrokenBonesSlashSoul_3, BBC_Combo_1, BBC_Combo_2, BBC_Combo_3, BBC_Combo_4);
+                              BBC_BrokenBonesSlashSoul_3, BBC_Combo_1, BBC_Combo_2, BBC_Combo_3, BBC_Combo_4,
+                              BS_Change_Show, BS_ChangeCombo_1, BS_ChangeCombo_2, BS_ChangeCombo_3,
+                              BS_ChangeTenCharSlash_1, BS_ChangeTenCharSlash_2); // 一阶段技能注册
+
+            SkillNPC.Register(phase2Start, WOR_Combo1_1, WOR_Combo1_2, WOR_Combo1_3, WOR_Combo1_4, WOR_Combo1_5, WOR_Combo2_1, WOR_Combo2_2); // 二阶段技能注册
             #endregion
 
             #region 链接
             phase1.OnEnterMode();
             CurrentMode = phase1;
+            noAtk.AddBySkilles(BS_combo1_1, BS_combo1_2, BS_combo1_3, BS_combo2_1, BS_combo2_2, BS_combo3, SP_combo1_1,
+                               SP_combo1_2, BS_SlashUp, BS_StarFall, BS_TenCharSlash_1, BS_TenCharSlash_2, SP_combo2_1,
+                               SP_combo2_2, SP_combo2_3, SP_combo4, SP_YiyaDash, BSS_combo1_1, BSS_combo1_2,
+                               BSS_combo1_3, BSS_combo1_4, BSS_combo1_5, BB_NCombo_1, BB_NCombo_2, BB_NCombo_3,
+                               BB_PursuitSlash, BBC_BrokenBonesSlashSoul_1, BBC_BrokenBonesSlashSoul_2,
+                               BBC_BrokenBonesSlashSoul_3, BBC_Combo_1, BBC_Combo_2, BBC_Combo_3, BBC_Combo_4,
+                               BBC_ArroganceBiting, BBC_Biting, BBC_BrokenBonesSlashSoul_1, BBC_BrokenBonesSlashSoul_2,
+                               BBC_BrokenBonesSlashSoul_3, BS_DefSlash, WOR_Combo1_1, WOR_Combo1_2, WOR_Combo1_3,
+                               WOR_Combo1_4, WOR_Combo2_1, WOR_Combo2_2, BS_ChangeCombo_1, BS_ChangeCombo_2,
+                               BS_ChangeCombo_3, BS_ChangeTenCharSlash_1, BS_ChangeTenCharSlash_2,BSS_Whip_Combo_1,BSS_Whip_Combo_2,BSS_Whip_Combo_3);
+
+            #region 二阶段技能
+            phase2Start.AddSkill(walk1);
+            walk1.AddSkill(BSS_Whip_Combo_1).AddSkill(BSS_Whip_Combo_2).AddSkill(BSS_Whip_Combo_3);
+
+            walk1.AddSkill(BS_ChangeTenCharSlash_1).AddSkill(BS_ChangeTenCharSlash_2);
+            walk1.AddSkill(BS_Change_Show).AddSkill(BS_ChangeCombo_1);
+            walk1.AddSkill(BS_ChangeCombo_1).AddSkill(BS_ChangeCombo_2).AddSkill(BS_ChangeCombo_3);
+
+            WOR_Open.AddBySkilles(walk1, BS_combo1_1, BS_combo1_2, BS_combo1_3, BS_combo2_1, BS_combo2_2, BS_combo3, SP_combo1_1,
+                     SP_combo1_2, BS_SlashUp, BS_StarFall, BS_TenCharSlash_1, BS_TenCharSlash_2, SP_combo2_1,
+                     SP_combo2_2, SP_combo2_3, SP_combo4, SP_YiyaDash, BSS_combo1_1, BSS_combo1_2,
+                     BSS_combo1_3, BSS_combo1_4, BSS_combo1_5, BB_NCombo_1, BB_NCombo_2, BB_NCombo_3,
+                     BB_PursuitSlash, BBC_BrokenBonesSlashSoul_1, BBC_BrokenBonesSlashSoul_2,
+                     BBC_BrokenBonesSlashSoul_3, BBC_Combo_1, BBC_Combo_2, BBC_Combo_3, BBC_Combo_4,
+                     BBC_ArroganceBiting, BBC_Biting, BBC_BrokenBonesSlashSoul_1, BBC_BrokenBonesSlashSoul_2,
+                     BBC_BrokenBonesSlashSoul_3, BS_DefSlash, WOR_Combo1_1, WOR_Combo1_2, WOR_Combo1_3, WOR_Combo1_4, WOR_Combo2_1, WOR_Combo2_2);
+            WOR_Combo1_2.AddSkill(WOR_Combo2_1).AddSkill(WOR_Combo2_2).AddSkill(WOR_Combo1_4);
+            walk1.AddSkill(WOR_Combo1_1).AddSkill(WOR_Combo1_2).AddSkill(WOR_Combo1_3).AddSkill(WOR_Combo1_4).AddSkill(WOR_Combo1_5);
+            #endregion
 
             #region 一阶段技能
-            noAtk_1.AddBySkilles(BS_combo1_1, BS_combo1_2, BS_combo1_3, BS_combo2_1, BS_combo2_2, BS_combo3, SP_combo1_1,
-                                 SP_combo1_2, BS_SlashUp, BS_StarFall, BS_TenCharSlash_1, BS_TenCharSlash_2, SP_combo2_1,
-                                 SP_combo2_2, SP_combo2_3, SP_combo4, SP_YiyaDash, BSS_combo1_1, BSS_combo1_2,
-                                 BSS_combo1_3, BSS_combo1_4, BSS_combo1_5, BB_NCombo_1, BB_NCombo_2, BB_NCombo_3,
-                                 BB_PursuitSlash, BBC_BrokenBonesSlashSoul_1, BBC_BrokenBonesSlashSoul_2,
-                                 BBC_BrokenBonesSlashSoul_3, BBC_Combo_1, BBC_Combo_2, BBC_Combo_3, BBC_Combo_4,
-                                 BBC_ArroganceBiting, BBC_Biting, BBC_BrokenBonesSlashSoul_1, BBC_BrokenBonesSlashSoul_2,
-                                 BBC_BrokenBonesSlashSoul_3, BS_DefSlash);
-
             walk1.AddSkill(BBC_BrokenBonesSlashSoul_1).AddSkill(BBC_BrokenBonesSlashSoul_2).AddSkill(BBC_BrokenBonesSlashSoul_3);
             walk1.AddSkill(BBC_ArroganceBiting).AddSkill(BBC_ArroganceBiting_End);
             walk1.AddSkill(BBC_Biting);
@@ -1429,12 +1955,61 @@ namespace StarOwner.Content.NPCs
             #endregion
 
         }
+
+        public void WalkerOfRain_Boom(Skills.BasicSwingSkill skill)
+        {
+            Vector2 vel = skill.swingHelper.velocity;
+            skill.swingHelper.velocity *= 2;
+            NPC.velocity.X -= skill.swingHelper.velocity.X * 0.01f;
+            for (int i = 0; i < 30; i++)
+            {
+                HitPiecredExtra98 Extra98 = new(skill.swingHelper.velocity * 0.5f * Main.rand.NextFloat(), NPC.Center + skill.swingHelper.velocity * 0.2f)
+                {
+                    color = Color.OrangeRed,
+                    scale = new Vector2(1,3),
+                    gravity = default
+                };
+                Core.Particles.ParticlesSystem.AddParticle(Core.Particles.BasicParticle.DrawLayer.AfterDust, Extra98);
+
+            }
+            #region 命中判定
+            SoundEngine.PlaySound(SoundID.Item14, NPC.Center);
+            if (skill.swingHelper.GetColliding(TargetPlayer.getRect()))
+            {
+                Player.HurtModifiers hurtModifiers = new()
+                {
+                    Dodgeable = false,
+                };
+                hurtModifiers.ScalingArmorPenetration += 1f;
+                hurtModifiers.SourceDamage += 9f;
+                Player.HurtInfo hurtInfo = hurtModifiers.ToHurtInfo(skill.WeaponDamage, TargetPlayer.statDefense, TargetPlayer.DefenseEffectiveness.Value, 0, true);
+                hurtInfo.DamageSource = PlayerDeathReason.ByNPC(NPC.whoAmI);
+                TargetPlayer.Hurt(hurtInfo);
+                for (int j = Main.rand.Next(5, 8); j > 0; j--)
+                {
+                    HitPiecredExtra98 hitPiecredExtra98 = new(skill.swingHelper.velocity.RotatedBy(MathHelper.PiOver2 * skill.setting.SwingDirectionChange.ToDirectionInt() * NPC.spriteDirection) * 0.2f, TargetPlayer.Center);
+                    Core.Particles.ParticlesSystem.AddParticle(Core.Particles.BasicParticle.DrawLayer.AfterDust, hitPiecredExtra98);
+                }
+                TargetPlayer.GetModPlayer<ControlPlayer>().StopControl = (int)Math.Log2(hurtInfo.Damage) * 10;
+            }
+            Main.instance.CameraModifiers.Add(new PunchCameraModifier(TargetPlayer.position, -Vector2.UnitX * TargetPlayer.direction, 5, 120,120));
+            #endregion
+            skill.swingHelper.velocity = vel;
+        }
+
+        public bool IsPhase(int i = 1)
+        {
+            if (i == 2)
+                return CurrentMode is SO_Phase2;
+            return CurrentMode is SO_Phase1;
+        }
+
         public float DisTarget() => TargetPlayer.Center.Distance(NPC.Center);
         public float GeneralSwing(float arg) => MathHelper.SmoothStep(0, 1f, MathF.Pow(arg, 2.5f));
         public bool InMiddleDis() => DisTarget() > ClosePlayer && DisTarget() < FarPlayer;
         public override void OnSkillTimeOut()
         {
-            if(CurrentMode is SO_Phase1)
+            if(IsPhase(1) || IsPhase(2))
             {
                 CurrentSkill.OnSkillDeactivate(walk1);
                 walk1.OnSkillActive(CurrentSkill);

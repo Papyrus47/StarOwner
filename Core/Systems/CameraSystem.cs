@@ -22,7 +22,7 @@ namespace StarOwner.Core.Systems
                 if(ScreenCenter == default)
                     ScreenCenter = Vector2.Lerp(ScreenCenter, Main.LocalPlayer.Center, 0.99f);
                 Main.screenPosition = Vector2.Lerp(ScreenCenter - Main.ScreenSize.ToVector2() * 0.5f, Main.screenPosition,0.01f);
-                ScreenCenter = Vector2.Lerp(ScreenCenter,Main.LocalPlayer.Center,0.02f);
+                ScreenCenter = Vector2.Lerp(ScreenCenter,Main.LocalPlayer.Center,0.2f);
                 Main.instance.CameraModifiers.ApplyTo(ref ScreenCenter);
             }
         }

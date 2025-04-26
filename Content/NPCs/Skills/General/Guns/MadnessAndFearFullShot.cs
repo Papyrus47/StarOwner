@@ -36,6 +36,7 @@ namespace StarOwner.Content.NPCs.Skills.General.Guns
                     proj.tileCollide = false;
                     proj.extraUpdates = 150;
                     FearGun.rot -= MathHelper.PiOver2 * NPC.spriteDirection * 0.5f;
+                    SoundEngine.PlaySound(SoundID.Item11 with { MaxInstances = 2}, NPC.Center);
                 }
                 for (int i = 0; i < 3; i++)
                 {
@@ -50,6 +51,7 @@ namespace StarOwner.Content.NPCs.Skills.General.Guns
                     Dust.NewDustPerfect(NPC.Center + MadnessGun.offset + MadnessGun.rot.ToRotationVector2() * 30, DustID.Smoke, MadnessGun.rot.ToRotationVector2().RotatedByRandom(0.3) * 3 * NPC.spriteDirection);
                 }
                 MadnessGun.rot -= MathHelper.PiOver2 * NPC.spriteDirection * 0.25f;
+                SoundEngine.PlaySound(SoundID.Item11, NPC.Center);
             }
             else if (NPC.ai[1] < 1)
             {

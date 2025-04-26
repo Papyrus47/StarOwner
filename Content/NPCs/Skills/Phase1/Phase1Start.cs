@@ -184,9 +184,15 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
             }
             base.AI();
         }
+        public override void OnSkillDeactivate(NPCSkills changeToSkill)
+        {
+            base.OnSkillDeactivate(changeToSkill);
+            StarOwnerNPC.Phase1Said = true;
+        }
         public override bool SwitchCondition(NPCSkills changeToSkill)
         {
-            return true;
+            if (StarOwnerNPC.Phase1Said)
+                return true;
             return NPC.ai[0] > 1500;
         }
     }

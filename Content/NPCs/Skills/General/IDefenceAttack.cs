@@ -13,6 +13,11 @@ namespace StarOwner.Content.NPCs.Skills.General
         /// </summary>
         public bool DefenceSucceed { get; set; }
         /// <summary>
+        /// 可以防御
+        /// </summary>
+        /// <returns></returns>
+        public bool CanDefence() => true;
+        /// <summary>
         /// 防御成功函数
         /// </summary>
         public void OnDefenceSucceed() { }

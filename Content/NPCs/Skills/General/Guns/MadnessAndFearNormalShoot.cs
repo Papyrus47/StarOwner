@@ -31,6 +31,7 @@ namespace StarOwner.Content.NPCs.Skills.General.Guns
             }
             MadnessGun.offset = toTarget.RotatedBy((0.2 + MathHelper.PiOver2) * -NPC.spriteDirection) * 15 + toTarget * 15;
             FearGun.offset = toTarget.RotatedBy(MathHelper.PiOver2 * -NPC.spriteDirection) * 5 + toTarget * 15;
+
             base.AI();
             Shoot();
             if (NPC.ai[1] > 8)
@@ -57,6 +58,7 @@ namespace StarOwner.Content.NPCs.Skills.General.Guns
                     proj.extraUpdates = 5;
                     proj.timeLeft /= 15;
                     FearGun.rot -= MathHelper.PiOver2 * NPC.spriteDirection * 0.5f;
+                    SoundEngine.PlaySound(SoundID.Item11 with {  MaxInstances = 2}, NPC.Center);
                 }
                 for (int i = 0; i < 3; i++)
                 {
@@ -66,6 +68,7 @@ namespace StarOwner.Content.NPCs.Skills.General.Guns
                     proj.extraUpdates = 15;
                     proj.timeLeft /= 5;
                 }
+                SoundEngine.PlaySound(SoundID.Item11, NPC.Center);
                 for (int i = 0; i < 15; i++)
                 {
                     Dust.NewDustPerfect(NPC.Center + MadnessGun.offset + MadnessGun.rot.ToRotationVector2() * 30, DustID.Smoke, MadnessGun.rot.ToRotationVector2().RotatedByRandom(0.3) * 6 * NPC.spriteDirection);

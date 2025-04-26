@@ -58,6 +58,15 @@ namespace StarOwner.Content.NPCs.Skills.Phase1
             base.AI();
             if (NPC.ai[0] > 25)
                 NPC.ai[0] = 10;
+            if (StarOwner.IsPhase(2)) // 二阶段时
+            {
+                if (disY > 64 && !NPC.collideY)
+                {
+                    NPC.velocity.Y = -0.001f;
+                    NPC.noTileCollide = false;
+                    NPC.collideY = true;
+                }
+            }
         }
         public override bool SwitchCondition(NPCSkills changeToSkill) => NPC.ai[0] > 20;
         public override void OnSkillActive(NPCSkills activeSkill)
