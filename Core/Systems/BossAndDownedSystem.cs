@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria.ModLoader.IO;
+using static StarOwner.Content.NPCs.StarOwnerNPC;
 
 namespace StarOwner.Core.Systems
 {
@@ -27,10 +28,12 @@ namespace StarOwner.Core.Systems
         public override void SaveWorldData(TagCompound tag)
         {
             tag.Add(nameof(downedStarOwner), downedStarOwner);
+            tag.Add(nameof(Phase1Said), Phase1Said);
         }
         public override void LoadWorldData(TagCompound tag)
         {
             downedStarOwner = tag.GetBool(nameof(downedStarOwner));
+            Phase1Said = tag.GetBool(nameof(Phase1Said));
         }
     }
 }

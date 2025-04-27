@@ -53,7 +53,7 @@ namespace StarOwner.Content.Subworld
             {
                 NPC.NewNPCDirect(player.GetSource_FromThis(), 11214, 4326, ModContent.NPCType<NPCs.StarOwnerNPC>());
             }
-            else if (BossAndDownedSystem.StarOwnerIndex != -1)
+            else if (BossAndDownedSystem.StarOwnerIndex != -1 && Main.npc[BossAndDownedSystem.StarOwnerIndex].ModNPC is StarOwnerNPC starOwner && !starOwner.IsPhase(3) && !starOwner.IsPhase(4))
             {
                 if(player.position.X < 11102)
                 {

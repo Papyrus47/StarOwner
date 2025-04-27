@@ -1,21 +1,21 @@
-﻿using StarOwner.Core.ModPlayers;
-using StarOwner.Core.SkillsNPC;
+﻿using StarOwner.Core.SkillsNPC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StarOwner.Content.NPCs.Skills.Phase2
+namespace StarOwner.Content.NPCs.Skills.Phase3
 {
-    public class Phase2Start : StarOwnerSkills
+    public class Phase3Start : StarOwnerSkills
     {
-        public Phase2Start(NPC npc) : base(npc)
+        public Phase3Start(NPC npc) : base(npc)
         {
         }
         public override void AI()
         {
             NPC.velocity.X *= 0.4f;
+            NPC.rotation = 0;
             NPC.ai[0]++;
             NPC.dontTakeDamage = true;
             NPC.noGravity = false;
@@ -25,17 +25,8 @@ namespace StarOwner.Content.NPCs.Skills.Phase2
                 case 150:
                     PopupText.NewText(new AdvancedPopupRequest()
                     {
-                        Color = Color.HotPink,
-                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase2Text + ".Text1"),
-                        DurationInFrames = 120,
-                        Velocity = -Vector2.UnitY
-                    }, NPC.Top);
-                    break;
-                case 250:
-                    PopupText.NewText(new AdvancedPopupRequest()
-                    {
-                        Color = Color.HotPink,
-                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase2Text + ".Text2"),
+                        Color = Color.White,
+                        Text = TheUtility.RegisterText(StarOwnerNPC.Phase3Text + ".Text1"),
                         DurationInFrames = 120,
                         Velocity = -Vector2.UnitY
                     }, NPC.Top);

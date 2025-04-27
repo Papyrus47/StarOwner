@@ -13,6 +13,10 @@ using StarOwner.Content.NPCs.Skills.Phase2;
 using StarOwner.Content.NPCs.Skills.Phase2.BrokenStarsSlashChange;
 using StarOwner.Content.NPCs.Skills.Phase2.BrokenStarStickWhip;
 using StarOwner.Content.NPCs.Skills.Phase2.WalkerOfRain;
+using StarOwner.Content.NPCs.Skills.Phase3;
+using StarOwner.Content.NPCs.Skills.Phase3.GraySmokeSword;
+using StarOwner.Content.NPCs.Skills.Phase4;
+using StarOwner.Content.NPCs.Skills.Phase4.DemonicSwordMidgaros;
 using StarOwner.Core.Cameras;
 using StarOwner.Core.ModPlayers;
 using StarOwner.Core.SkillsNPC;
@@ -33,6 +37,8 @@ namespace StarOwner.Content.NPCs
         public static bool Phase1Said;
         public const string Phase1Text = "Mods.StarOwner.Bosses.StarOwner.Phase1Text";
         public const string Phase2Text = "Mods.StarOwner.Bosses.StarOwner.Phase2Text";
+        public const string Phase3Text = "Mods.StarOwner.Bosses.StarOwner.Phase3Text";
+        public const string Phase4Text = "Mods.StarOwner.Bosses.StarOwner.Phase4Text";
         public Player drawPlayer;
         public Player TargetPlayer
         {
@@ -71,6 +77,10 @@ namespace StarOwner.Content.NPCs
         public bool ChangeMode;
 
         public Phase2Start phase2Start;
+        public Phase3Start phase3Start;
+        public Phase4Start phase4Start;
+        public Walk3 walk3;
+        public int Phase3NPCDeathCount;
 
         public override void SetStaticDefaults()
         {
@@ -79,14 +89,6 @@ namespace StarOwner.Content.NPCs
         public override void Load()
         {
             //TheUtility.RegisterText(Phase1Text);
-        }
-        public override void SaveData(TagCompound tag)
-        {
-            tag.Add(nameof(Phase1Said), Phase1Said);
-        }
-        public override void LoadData(TagCompound tag)
-        {
-            Phase1Said = tag.GetBool(nameof(Phase1Said));
         }
         public override void SetDefaults()
         {
@@ -123,6 +125,24 @@ namespace StarOwner.Content.NPCs
                 NPC.active = true;
                 return false;
             }
+            else if (IsPhase(2))
+            {
+                ChangeMode = true;
+                NPC.life = NPC.lifeMax;
+                NPC.active = true;
+                return false;
+            }
+            else if (IsPhase(3))
+            {
+                Phase3NPCDeathCount++;
+                if (Phase3NPCDeathCount >= 20)
+                {
+                    ChangeMode = true;
+                }
+                NPC.life = NPC.lifeMax;
+                NPC.active = true;
+                return false;
+            }
             return base.CheckDead();
         }
         public override bool? DrawHealthBar(byte hbPosition, ref float scale, ref Vector2 position)
@@ -151,11 +171,14 @@ namespace StarOwner.Content.NPCs
             //}
             if (IsStrongBrokenStarsSlashTime > 0)
                 IsStrongBrokenStarsSlashTime--;
-            if (NPC.lifeMax > 1000)
+            if (IsPhase(1))
             {
-                NPC.life = NPC.lifeMax = 1000;
+                if (NPC.lifeMax > 1000)
+                {
+                    NPC.life = NPC.lifeMax = 1000;
+                }
+                NPC.defense = NPC.defDefense; // 防星击
             }
-            NPC.defense = NPC.defDefense; // 防星击
             starPower.ValueMax = (int)(NPC.lifeMax * 2.2f);
             if(starPower.starPowerResetTime > 0)
                 starPower.starPowerResetTime--;
@@ -188,6 +211,8 @@ namespace StarOwner.Content.NPCs
             #region 注册
             SO_Phase1 phase1 = new(NPC);
             SO_Phase2 phase2 = new(NPC);
+            SO_Phase3 phase3 = new(NPC);
+            SO_Phase4 phase4 = new(NPC);
 
             #region 一阶段与二阶段通用
             Phase1Start phase1Start = new(NPC);
@@ -1855,10 +1880,15 @@ namespace StarOwner.Content.NPCs
             BrokenStarStickWhipSwing BSS_Whip_Combo_3 = new(NPC, BrokenStarStickWhipSwing.HeldType.Tail, -Vector2.UnitY.RotatedBy(-0.4f), MathHelper.Pi + 0.8f, 4f, true, () => true);
             #endregion
             #endregion
+            #region 三阶段
+            phase3Start = new(NPC);
+            walk3 = new Walk3(NPC);
+            phase4Start = new(NPC);
+            #endregion
             #endregion
 
             #region 登记
-            SkillNPC.Register(phase1,phase2);
+            SkillNPC.Register(phase1,phase2,phase3,phase4);
             SkillNPC.Register(phase1Start, walk1, noAtk);
             SkillNPC.Register(BS_combo1_1, BS_combo1_2, BS_combo1_3, BS_combo2_1, BS_combo2_2, BS_combo3,
                               BS_TenCharSlash_1, BS_TenCharSlash_2, BS_SlashUp, BS_StarFall, SP_combo1_1, SP_combo1_2,
@@ -1955,7 +1985,315 @@ namespace StarOwner.Content.NPCs
             #endregion
 
         }
+        public void RegisterPhase3()
+        {
+            float GSS_Length = new Vector2(94).Length();
+            GraySmokeSwordSwing Combo1_1 = new(NPC,
+                new()
+                {
+                    PreSwingTime = 6
+                },
+                new()
+                {
+                    SwingTime = 15,
+                    SwingTimeChange = GeneralSwing
+                }, new()
+                {
+                    PostSwingTime = 5,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1f,
+                    StartVel = -Vector2.UnitY.RotatedBy(-0.4),
+                    SwingRot = MathHelper.Pi + 0.8f,
+                    VelScale = new Vector2(1, 0.8f) * 1.2f,
+                    VisualRotation = -0.2f,
+                    OnHitStopTime = 9,
+                    SwingDirectionChange = true,
+                    ChangeCondition = () => DisTarget() < ClosePlayer,
+                    SwingLenght = GSS_Length
+                });
+            GraySmokeSwordSwing Combo1_2 = new(NPC,
+                new()
+                {
+                    PreSwingTime = 6
+                },
+                new()
+                {
+                    SwingTime = 15,
+                    SwingTimeChange = GeneralSwing,
+                    OnUse = (_) =>
+                    {
+                        NPC.velocity.X = (TargetPlayer.Center - NPC.Center).X * 0.4f;
+                    },
+                    OnChange = (_) =>
+                    {
+                        NPC.velocity.X *= 0.1f;
+                    }
+                }, new()
+                {
+                    PostSwingTime = 5,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1f,
+                    StartVel = -Vector2.UnitY.RotatedBy(-0.4),
+                    SwingRot = MathHelper.Pi + 0.8f,
+                    VelScale = new Vector2(1, 0.2f) * 1.2f,
+                    VisualRotation = -0.8f,
+                    OnHitStopTime = 9,
+                    SwingDirectionChange = true,
+                    ChangeCondition = () => true,
+                    SwingLenght = GSS_Length
+                });
+            GraySmokeSwordSwing Combo1_3 = new(NPC,
+                new()
+                {
+                    PreSwingTime = 6
+                },
+                new()
+                {
+                    SwingTime = 15,
+                    SwingTimeChange = GeneralSwing,
+                    OnUse = (_) =>
+                    {
+                        NPC.velocity.X = (TargetPlayer.Center - NPC.Center).X * 0.4f;
+                    },
+                    OnChange = (_) =>
+                    {
+                        NPC.velocity.X *= 0.1f;
+                    }
+                }, new()
+                {
+                    PostSwingTime = 10,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1.5f,
+                    StartVel = Vector2.UnitY,
+                    SwingRot = MathHelper.PiOver2,
+                    VelScale = new Vector2(1, 0.2f) * 1.2f,
+                    VisualRotation = -0.8f,
+                    OnHitStopTime = 9,
+                    SwingDirectionChange = false,
+                    ChangeCondition = () => true,
+                    SwingLenght = GSS_Length
+                });
+            GraySmokeSwordSwing Combo1_4 = new(NPC,
+                new()
+                {
+                    PreSwingTime = 6
+                },
+                new()
+                {
+                    SwingTime = 15,
+                    SwingTimeChange = GeneralSwing,
+                    OnUse = (_) =>
+                    {
+                        NPC.velocity.X = (TargetPlayer.Center - NPC.Center).X * 0.4f;
+                    },
+                    OnChange = (_) =>
+                    {
+                        NPC.velocity.X *= 0.1f;
+                    }
+                }, new()
+                {
+                    PostSwingTime = 5,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1f,
+                    StartVel = Vector2.UnitY.RotatedBy(0.4),
+                    SwingRot = MathHelper.Pi + 0.8f,
+                    VelScale = new Vector2(1, 1f) * 1.2f,
+                    VisualRotation = 0f,
+                    OnHitStopTime = 9,
+                    SwingDirectionChange = false,
+                    ChangeCondition = () => true,
+                    SwingLenght = GSS_Length
+                });
+            GraySmokeSwordSwing InhaleGarySmoke = new(NPC,
+                new()
+                {
+                    PreSwingTime = 6
+                },
+                new()
+                {
+                    SwingTime = 15,
+                    SwingTimeChange = GeneralSwing,
+                    OnUse = (_) =>
+                    {
+                        NPC.velocity.X = (TargetPlayer.Center - NPC.Center).X * 0.4f;
+                    },
+                    OnChange = (_) =>
+                    {
+                        NPC.velocity.X *= 0.1f;
+                    }
+                }, new()
+                {
+                    PostSwingTime = 5,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 3f,
+                    StartVel = Vector2.UnitY.RotatedBy(0.4),
+                    SwingRot = MathHelper.Pi + 0.8f,
+                    VelScale = new Vector2(1, 1f) * 1.2f,
+                    VisualRotation = 0f,
+                    OnHitStopTime = 9,
+                    SwingDirectionChange = false,
+                    ChangeCondition = () => Main.rand.NextBool(15) && DisTarget() < FarPlayer,
+                    SwingLenght = GSS_Length
+                });
+            SkillNPC.Register(phase3Start, walk3);
+            SkillNPC.Register(Combo1_1, Combo1_2, Combo1_3, Combo1_4, InhaleGarySmoke);
 
+            InhaleGarySmoke.AddBySkilles(walk3,Combo1_1, Combo1_2, Combo1_3, Combo1_4);
+
+            walk3.AddSkill(Combo1_1).AddSkill(Combo1_2).AddSkill(Combo1_3).AddSkill(Combo1_4);
+
+            phase3Start.AddSkill(walk3);
+        }
+        public void RegisterPhase4()
+        {
+            float DSM_Length = new Vector2(130,80).Length();
+            NoAtk noAtk = new(NPC, 1);
+            DemonicSword_MidgarosSwing Combo1_1 = new(NPC,
+                new()
+                {
+                    PreSwingTime = 6
+                },
+                new()
+                {
+                    SwingTime = 15,
+                    SwingTimeChange = GeneralSwing
+                }, new()
+                {
+                    PostSwingTime = 5,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1f,
+                    StartVel = -Vector2.UnitY.RotatedBy(-0.4),
+                    SwingRot = MathHelper.Pi + 0.8f,
+                    VelScale = new Vector2(1, 0.4f),
+                    VisualRotation = -0.6f,
+                    OnHitStopTime = 9,
+                    SwingDirectionChange = true,
+                    ChangeCondition = () => DisTarget() < ClosePlayer,
+                    SwingLenght = DSM_Length
+                });
+            DemonicSword_MidgarosSwing Combo1_2 = new(NPC,
+                new()
+                {
+                    PreSwingTime = 6
+                },
+                new()
+                {
+                    SwingTime = 15,
+                    SwingTimeChange = GeneralSwing,
+                    OnUse = (_) =>
+                    {
+                        NPC.velocity.X = (TargetPlayer.Center - NPC.Center).X * 0.1f;
+                    },
+                    OnChange = (_) =>
+                    {
+                        NPC.velocity.X *= 0.1f;
+                    }
+                }, new()
+                {
+                    PostSwingTime = 5,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1.3f,
+                    StartVel = Vector2.UnitY.RotatedBy(0.4),
+                    SwingRot = MathHelper.Pi + 0.8f,
+                    VelScale = new Vector2(1, 0.4f),
+                    VisualRotation = -0.6f,
+                    OnHitStopTime = 9,
+                    SwingDirectionChange = false,
+                    ChangeCondition = () => true,
+                    SwingLenght = DSM_Length
+                });
+            DemonicSword_MidgarosSwing Combo1_3 = new(NPC,
+                new()
+                {
+                    PreSwingTime = 6
+                },
+                new()
+                {
+                    SwingTime = 30,
+                    SwingTimeChange = GeneralSwing,
+                    OnUse = (_) =>
+                    {
+                        NPC.velocity.X = (TargetPlayer.Center - NPC.Center).X * 0.1f;
+                    },
+                    OnChange = (_) =>
+                    {
+                        NPC.velocity.X *= 0.1f;
+                    }
+                }, new()
+                {
+                    PostSwingTime = 10,
+                    PostSwingTimeMax = 20
+                }, new()
+                {
+                    ActionDmg = 1.5f,
+                    StartVel = Vector2.UnitY,
+                    SwingRot = MathHelper.TwoPi,
+                    VelScale = new Vector2(1, 1f),
+                    VisualRotation = 0f,
+                    OnHitStopTime = 9,
+                    SwingDirectionChange = false,
+                    ChangeCondition = () => true,
+                    SwingLenght = DSM_Length
+                });
+            DemonicSwordMidgaros_DemonSlash demonSlash = new(NPC,
+                new()
+                {
+                    PreSwingTime = 30
+                },
+                new()
+                {
+                    SwingTime = 5,
+                    SwingTimeChange = GeneralSwing,
+                    OnUse = (_) =>
+                    {
+                        NPC.velocity.X = Math.Abs((TargetPlayer.Center - NPC.Center).X) * NPC.spriteDirection;
+                    },
+                    OnChange = (_) =>
+                    {
+                        NPC.velocity.X *= 0;
+                    }
+                }, new()
+                {
+                    PostSwingTime = 40,
+                    PostSwingTimeMax = 70
+                }, new()
+                {
+                    ActionDmg = 1.5f,
+                    StartVel = -Vector2.UnitY.RotatedBy(-0.4f),
+                    SwingRot = MathHelper.Pi + 0.4f,
+                    VelScale = new Vector2(1, 1f),
+                    VisualRotation = 0f,
+                    OnHitStopTime = 0,
+                    SwingDirectionChange = true,
+                    ChangeCondition = () => Main.rand.NextBool(15) && Math.Abs(TargetPlayer.position.Y - NPC.position.Y) < 64,
+                    SwingLenght = DSM_Length,
+                    ExtraUpdate = 6
+                });
+            SummonIceSoul summonIceSoul = new(NPC);
+
+            SkillNPC.Register(phase4Start, noAtk, walk3, Combo1_1, Combo1_2, Combo1_3,summonIceSoul);
+            noAtk.AddBySkilles(Combo1_1, Combo1_2, Combo1_3);
+
+            walk3.AddSkill(demonSlash).AddSkill(Combo1_1);
+            walk3.AddSkill(summonIceSoul);
+            walk3.AddSkill(Combo1_1).AddSkill(Combo1_2).AddSkill(Combo1_3).AddSkill(demonSlash);
+
+            phase4Start.AddSkill(walk3);
+        }
         public void WalkerOfRain_Boom(Skills.BasicSwingSkill skill)
         {
             Vector2 vel = skill.swingHelper.velocity;
@@ -1999,13 +2337,17 @@ namespace StarOwner.Content.NPCs
 
         public bool IsPhase(int i = 1)
         {
+            if (i == 4)
+                return CurrentMode is SO_Phase4;
+            if (i == 3)
+                return CurrentMode is SO_Phase3;
             if (i == 2)
                 return CurrentMode is SO_Phase2;
             return CurrentMode is SO_Phase1;
         }
 
         public float DisTarget() => TargetPlayer.Center.Distance(NPC.Center);
-        public float GeneralSwing(float arg) => MathHelper.SmoothStep(0, 1f, MathF.Pow(arg, 2.5f));
+        public static float GeneralSwing(float arg) => MathHelper.SmoothStep(0, 1f, MathF.Pow(arg, 2.5f));
         public bool InMiddleDis() => DisTarget() > ClosePlayer && DisTarget() < FarPlayer;
         public override void OnSkillTimeOut()
         {
@@ -2015,6 +2357,13 @@ namespace StarOwner.Content.NPCs
                 walk1.OnSkillActive(CurrentSkill);
                 OldSkills.Enqueue(CurrentSkill);
                 CurrentSkill = walk1;
+            }
+            else
+            {
+                CurrentSkill.OnSkillDeactivate(walk3);
+                walk3.OnSkillActive(CurrentSkill);
+                OldSkills.Enqueue(CurrentSkill);
+                CurrentSkill = walk3;
             }
         }
     }

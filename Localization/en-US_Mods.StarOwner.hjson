@@ -34,5 +34,13 @@ Bosses:{
 			Text1:Interesting, interesting. They actually beat me to death once.
 			Text2:This anger, you will be repaid twice as much. You will... You will!
 		}
+		Phase3Text:{
+			Text1:You are too weak, Star Owner, I come.
+		}
+		Phase4Text:{
+			Text1:Can't hold back any longer? Are you ready?
+			Text2:Star Owner, please.
+			Text3:Midgaros, come out!
+		}
 	}
 }

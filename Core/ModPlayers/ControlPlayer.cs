@@ -10,6 +10,10 @@ namespace StarOwner.Core.ModPlayers
     public class ControlPlayer : ModPlayer
     {
         public int StopControl;
+        /// <summary>
+        /// 冰控制
+        /// </summary>
+        public int IceControl;
         public override void ProcessTriggers(TriggersSet triggersSet)
         {
             if (StopControl > 0)
@@ -33,7 +37,23 @@ namespace StarOwner.Core.ModPlayers
                 Main.mouseLeft = false;
                 Main.mouseRight = false;
             }
-
+            if(IceControl > 0)
+            {
+                IceControl--;
+                Player.front = 1;
+                Player.AddBuff(BuffID.Frozen, 5);
+                Player.frozen = true;
+                Player.controlUseItem = Player.controlUseTile = false;
+                Player.controlUp = Player.controlDown = Player.controlLeft = Player.controlRight = false;
+                Player.controlHook = false;
+                Player.controlMount = false;
+                Player.controlJump = false;
+                Player.controlQuickHeal = false;
+                Player.controlQuickMana = false;
+                Player.RemoveAllGrapplingHooks();
+                Main.mouseLeft = false;
+                Main.mouseRight = false;
+            }
         }
     }
 }

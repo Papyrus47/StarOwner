@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Terraria.Graphics.Shaders;
+using Terraria.ID;
 
 namespace StarOwner.Content.NPCs.Skills
 {
@@ -45,9 +47,26 @@ namespace StarOwner.Content.NPCs.Skills
             StarOwner.drawPlayer.PlayerFrame();
             StarOwner.drawPlayer.head = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerHead", EquipType.Head);
             StarOwner.drawPlayer.body = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerBody", EquipType.Body);
-            if (StarOwner.IsPhase(2))
+            if (StarOwner.IsPhase(2) || StarOwner.IsPhase(4))
                 StarOwner.drawPlayer.body = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerBodyShow", EquipType.Body);
             StarOwner.drawPlayer.legs = EquipLoader.GetEquipSlot(global::StarOwner.StarOwner.Instance, "StarOwnerLegs", EquipType.Legs);
+            if(StarOwner.IsPhase(3))
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    Dust obj = Dust.NewDustDirect(NPC.Center, 0, 0, DustID.TheDestroyer);
+                    obj.position = NPC.Center + new Vector2(NPC.spriteDirection * 6, -8);
+                    obj.noGravity = true;
+                    obj.velocity = NPC.velocity * -0.25f * i;
+                    obj.scale = 1.1f;
+
+                    obj = Dust.NewDustDirect(NPC.Center, 0, 0, DustID.TheDestroyer);
+                    obj.position = NPC.Center + new Vector2(NPC.spriteDirection == 1 ? -6 : -16, -8);
+                    obj.noGravity = true;
+                    obj.velocity = NPC.velocity * -0.25f * i;
+                    obj.scale = 1.1f;
+                }
+            }    
         }
     }
 }

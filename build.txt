@@ -1,4 +1,4 @@
-displayName = 星辰之主Boss战（Star Owner Boss Fight）
-author = Papyru(即星辰之主)
-version = 0.1.8
+﻿displayName = 星辰之主Boss战（Star Owner Boss Fight）
+author = Papyru(即星辰之主
+version = 0.2.0
 modReferences = SubworldLibrary
