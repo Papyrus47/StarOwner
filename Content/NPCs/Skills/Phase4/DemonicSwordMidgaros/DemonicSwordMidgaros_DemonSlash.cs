@@ -128,7 +128,9 @@ namespace StarOwner.Content.NPCs.Skills.Phase4.DemonicSwordMidgaros
                             }
                             Player.HurtModifiers hurtModifiers = new()
                             {
-                                Dodgeable = false,
+                                Dodgeable = true,
+                                HitDirection = NPC.spriteDirection,
+                                HitDirectionOverride = NPC.spriteDirection
                             };
                             NPC.ai[3] = 1;
                             hurtModifiers.SourceDamage += setting.ActionDmg - 1f;
@@ -136,6 +138,10 @@ namespace StarOwner.Content.NPCs.Skills.Phase4.DemonicSwordMidgaros
                             Player.HurtInfo hurtInfo = hurtModifiers.ToHurtInfo(WeaponDamage, Target.statDefense, Target.DefenseEffectiveness.Value, 0, true);
                             hurtInfo.DamageSource = PlayerDeathReason.ByNPC(NPC.whoAmI);
                             hurtInfo.Damage = int.MaxValue - 10;
+                            if (PlayerLoader.FreeDodge(Target, hurtInfo))
+                                break;
+                            if (PlayerLoader.ConsumableDodge(Target, hurtInfo))
+                                break;
                             Target.Hurt(hurtInfo);
                             Target.KillMe(hurtInfo.DamageSource, 10.0, NPC.spriteDirection);
                             for (int j = Main.rand.Next(5, 8) + 15; j > 0; j--)

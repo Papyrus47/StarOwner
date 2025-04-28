@@ -231,17 +231,23 @@ namespace StarOwner.Content.NPCs.Skills
                             }
                             Player.HurtModifiers hurtModifiers = new()
                             {
-                                Dodgeable = false,
+                                Dodgeable = true,
+                                HitDirection = NPC.spriteDirection,
+                                HitDirectionOverride = NPC.spriteDirection
                             };
                             hurtModifiers.SourceDamage += setting.ActionDmg - 1f;
                             hurtModifiers.SourceDamage += StarOwner.DamageAdd;
                             onSwing.modifyHit?.Invoke(Target, ref hurtModifiers);
                             Player.HurtInfo hurtInfo = hurtModifiers.ToHurtInfo(WeaponDamage, Target.statDefense, Target.DefenseEffectiveness.Value, 0, true);
                             hurtInfo.DamageSource = PlayerDeathReason.ByNPC(NPC.whoAmI);
+                            if (PlayerLoader.FreeDodge(Target, hurtInfo))
+                                break;
+                            if (PlayerLoader.ConsumableDodge(Target, hurtInfo))
+                                break;
                             Target.Hurt(hurtInfo);
                             for (int j = Main.rand.Next(5, 8); j > 0; j--)
                             {
-                                HitPiecredExtra98 hitPiecredExtra98 = new(swingHelper.velocity.RotatedBy(MathHelper.PiOver2 * setting.SwingDirectionChange.ToDirectionInt() * NPC.spriteDirection) * 0.2f,Target.Center);
+                                HitPiecredExtra98 hitPiecredExtra98 = new(swingHelper.velocity.RotatedBy(MathHelper.PiOver2 * setting.SwingDirectionChange.ToDirectionInt() * NPC.spriteDirection) * 0.2f, Target.Center);
                                 Core.Particles.ParticlesSystem.AddParticle(Core.Particles.BasicParticle.DrawLayer.AfterDust, hitPiecredExtra98);
                             }
                             Target.GetModPlayer<ControlPlayer>().StopControl = (int)Math.Log2(hurtInfo.Damage) * 10;

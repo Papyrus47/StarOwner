@@ -18,18 +18,18 @@ namespace StarOwner.Content.Subworld
         public override int Width => 1065;
 
         public override int Height => 650 + 200;
-        public override bool ShouldSave => false;
-        public override bool NoPlayerSaving => true;
-        public override List<GenPass> Tasks => new()
-        {
+        public override bool ShouldSave => true;
+        public override bool NoPlayerSaving => false;
+        public override List<GenPass> Tasks =>
+        [
             new SummonGround()
-        };
+        ];
         public override void OnLoad()
         {
             Main.dayTime = false;
             Main.time = 1000;
             Main.spawnTileX = Width - 20;
-            Main.spawnTileY += 100;
+            Main.spawnTileY = Height / 2;
             Main.worldSurface = Height;
         }
         public override void Update()

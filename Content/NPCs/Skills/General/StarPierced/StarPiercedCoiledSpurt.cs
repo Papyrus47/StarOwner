@@ -59,12 +59,18 @@ namespace StarOwner.Content.NPCs.Skills.General.StarPierced
                     onHitCount++;
                     Player.HurtModifiers hurtModifiers = new()
                     {
-                        Dodgeable = false,
+                        Dodgeable = true,
+                        HitDirection = NPC.spriteDirection,
+                        HitDirectionOverride = NPC.spriteDirection
                     };
                     hurtModifiers.SourceDamage += ActionDmg - 1f;
                     hurtModifiers.SourceDamage += StarOwner.DamageAdd;
                     Player.HurtInfo hurtInfo = hurtModifiers.ToHurtInfo(3, Target.statDefense, Target.DefenseEffectiveness.Value, 0, true);
                     hurtInfo.DamageSource = PlayerDeathReason.ByNPC(NPC.whoAmI);
+                    if (PlayerLoader.FreeDodge(Target, hurtInfo))
+                        return ;
+                    if (PlayerLoader.ConsumableDodge(Target, hurtInfo))
+                        return;
                     Target.Hurt(hurtInfo);
                     for (int j = Main.rand.Next(5, 8); j > 0; j--)
                     {

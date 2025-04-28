@@ -67,8 +67,8 @@ namespace StarOwner.Core.SkillProjs.GeneralSkills
             Player.itemAnimation = Player.itemTime = 2;
             Player.ChangeDir(Projectile.direction);
             Player.heldProj = Projectile.whoAmI;
-            Player.fullRotation = Projectile.velocity.X * SpurtHelper.Time * 0.02f;
-            Player.fullRotationOrigin = new Vector2(Player.width * 0.5f, Player.height);
+            //Player.fullRotation = Projectile.velocity.X * SpurtHelper.Time * 0.02f;
+            //Player.fullRotationOrigin = new Vector2(Player.width * 0.5f, Player.height);
             Player.itemRotation = MathF.Atan2(Projectile.velocity.Y * Player.direction, Projectile.velocity.X * Player.direction);
             SyncData();
             #region 伤害重置

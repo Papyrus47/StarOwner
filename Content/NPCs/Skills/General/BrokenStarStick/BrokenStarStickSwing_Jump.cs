@@ -127,13 +127,19 @@ namespace StarOwner.Content.NPCs.Skills.General.BrokenStarStick
                             }
                             Player.HurtModifiers hurtModifiers = new()
                             {
-                                Dodgeable = false,
+                                Dodgeable = true,
+                                HitDirection = NPC.spriteDirection,
+                                HitDirectionOverride = NPC.spriteDirection
                             };
                             hurtModifiers.SourceDamage += setting.ActionDmg - 1f;
                             hurtModifiers.SourceDamage += StarOwner.DamageAdd;
                             onSwing.modifyHit?.Invoke(Target, ref hurtModifiers);
                             Player.HurtInfo hurtInfo = hurtModifiers.ToHurtInfo(WeaponDamage, Target.statDefense, Target.DefenseEffectiveness.Value, 0, true);
                             hurtInfo.DamageSource = PlayerDeathReason.ByNPC(NPC.whoAmI);
+                            if (PlayerLoader.FreeDodge(Target, hurtInfo))
+                                break;
+                            if (PlayerLoader.ConsumableDodge(Target, hurtInfo))
+                                break;
                             Target.Hurt(hurtInfo);
                             for (int j = Main.rand.Next(5, 8); j > 0; j--)
                             {

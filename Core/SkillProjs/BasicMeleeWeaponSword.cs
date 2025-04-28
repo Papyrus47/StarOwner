@@ -1,4 +1,6 @@
-﻿namespace StarOwner.Core.SkillProjs
+﻿using StarOwner.Core.ModPlayers;
+
+namespace StarOwner.Core.SkillProjs
 {
     public abstract class BasicMeleeWeaponSword : ModProjectile, IBasicSkillProj
     {
@@ -23,7 +25,20 @@
         public int ID { get; set; }
         public Dictionary<ProjSkill_Instantiation, int> IDParis { get; set; }
         public Dictionary<int, ProjSkill_Instantiation> SkillsParis { get; set; }
-
+        /// <summary>
+        /// 属于物品攻击命中
+        /// </summary>
+        public virtual bool IsItemHit => true;
+        public IBasicSkillProj BasicSkillProj => this;
+        #region 使用相关
+        public int MouseLeftTime;
+        public int MouseRightTime;
+        public int StopTime;
+        public bool IsMouseLeftChick => MouseLeftTime < 10 && MouseLeftTime > 0;
+        public bool IsMouseLeftChanning => MouseLeftTime >= 10;
+        public bool IsMouseRightChick => MouseRightTime < 10 && MouseRightTime > 0;
+        public bool IsMouseRightChanning => MouseRightTime >= 10;
+        #endregion
         public override void SetDefaults()
         {
             Projectile.ownerHitCheck = true; // 弹幕检查是否隔墙
@@ -41,18 +56,24 @@
                 SpawnItem = itemUse.Item;
                 Player = itemUse.Player;
                 Projectile.Name = SpawnItem.Name;
-                SwingHelper ??= new(Projectile, 40, TextureAssets.Item[SpawnItem.type]);
+                NewSwingHelper();
                 Projectile.scale = Player.GetAdjustedItemScale(SpawnItem);
                 Projectile.Size = SpawnItem.Size * Projectile.scale;
-                SwingHelper.DrawTrailCount = 3; // 绘制拖尾的次数
-                SwingHelper.DrawItem_ScaleMoreThanOne = false; // 绘制武器的比例是否大于1
                 IDParis = new();
                 SkillsParis = new();
+                OldSkills = new();
                 //SwingLength = Projectile.Size.Length();
                 //Main.projFrames[Type] = TheUtility.GetItemFrameCount(SpawnItem);
                 Init();
             }
         }
+        public virtual void NewSwingHelper()
+        {
+            SwingHelper ??= new(Projectile, 40, TextureAssets.Item[SpawnItem.type]);
+            SwingHelper.DrawTrailCount = 3; // 绘制拖尾的次数
+            SwingHelper.DrawItem_ScaleMoreThanOne = false; // 绘制武器的比例是否大于1
+        }
+
         public override void OnKill(int timeLeft)
         {
             if (Player != null)
@@ -70,6 +91,11 @@
             Player.ResetMeleeHitCooldowns();
             IBasicSkillProj basicSkillProj = this;
             basicSkillProj.SwitchSkill();
+            MouseUpdate();
+            if (CurrentSkill.SwitchCondition())
+                StopTime++;
+            else
+                StopTime = 0;
         }
         #region 同步环节
         public override void SendExtraAI(BinaryWriter writer)
@@ -87,6 +113,20 @@
             //Player.controlUseTile = reader.ReadBoolean();
         }
         #endregion
+        /// <summary>
+        /// 鼠标更新
+        /// </summary>
+        public virtual void MouseUpdate()
+        {
+            if (Main.mouseLeft)
+                MouseLeftTime++;
+            else
+                MouseLeftTime = 0;
+            if (Main.mouseRight)
+                MouseRightTime++;
+            else
+                MouseRightTime = 0;
+        }
         public override bool ShouldUpdatePosition() => false;
         public override bool? CanDamage() => CurrentSkill.CanDamage();
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) => CurrentSkill.Colliding(projHitbox, targetHitbox);
@@ -97,10 +137,16 @@
         }
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            ItemLoader.ModifyHitNPC(SpawnItem, Player, target, ref modifiers); // 调用Mod物品的ModifyHitNPC
-            CurrentSkill.ModifyHitNPC(target, ref modifiers);
-            modifiers.HideCombatText();
-            modifiers.FinalDamage *= 0;
+            if (IsItemHit)
+            {
+                ItemLoader.ModifyHitNPC(SpawnItem, Player, target, ref modifiers); // 调用Mod物品的ModifyHitNPC
+                CurrentSkill.ModifyHitNPC(target, ref modifiers);
+
+                modifiers.HideCombatText();
+                modifiers.FinalDamage *= 0;
+            }
+            else
+                CurrentSkill.ModifyHitNPC(target, ref modifiers);
         }
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
@@ -113,17 +159,23 @@
         }
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            Type type = Player.GetType();
-            type.GetField("_spawnVolcanoExplosion", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Player, true);
-            type.GetField("_spawnBloodButcherer", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Player, true);
-            type.GetField("_batbatCanHeal", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Player, true);
-            type.GetField("_spawnTentacleSpikes", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Player, true);
-            CurrentSkill.OnHitNPC(target, hit, damageDone); // 技能命中效果
-            ItemLoader.OnHitNPC(SpawnItem, Player, target, hit, damageDone); // Mod物品命中
-            ItemLoader.MeleeEffects(SpawnItem, Player, target.getRect()); // Mod物品命中近战特效
-            Player.attackCD = 0;
-            TheUtility.ItemCheck_MeleeHitNPCs(SpawnItem, Player, target.getRect(), hit.SourceDamage, hit.Knockback);
-            TheUtility.VillagesItemOnHit(SpawnItem, Player, Projectile.Hitbox, Projectile.originalDamage, Projectile.knockBack, target.whoAmI, Projectile.damage, damageDone); // 原版物品命中
+            if (IsItemHit)
+            {
+                Type type = Player.GetType();
+                type.GetField("_spawnVolcanoExplosion", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Player, true);
+                type.GetField("_spawnBloodButcherer", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Player, true);
+                type.GetField("_batbatCanHeal", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Player, true);
+                type.GetField("_spawnTentacleSpikes", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Player, true);
+                CurrentSkill.OnHitNPC(target, hit, damageDone); // 技能命中效果
+                ItemLoader.OnHitNPC(SpawnItem, Player, target, hit, damageDone); // Mod物品命中
+                ItemLoader.MeleeEffects(SpawnItem, Player, target.getRect()); // Mod物品命中近战特效
+                Player.attackCD = 0;
+                TheUtility.ItemCheck_MeleeHitNPCs(SpawnItem, Player, target.getRect(), hit.SourceDamage, hit.Knockback);
+                TheUtility.VillagesItemOnHit(SpawnItem, Player, Projectile.Hitbox, Projectile.originalDamage, Projectile.knockBack, target.whoAmI, Projectile.damage, damageDone); // 原版物品命中
+            }
+            else
+                CurrentSkill.OnHitNPC(target, hit, damageDone); // 技能命中效果
+            
         }
         public override void OnHitPlayer(Player target, Player.HurtInfo info)
         {
@@ -139,5 +191,9 @@
         #endregion
         public abstract void Init();
         public virtual bool PreSkillTimeOut() => true;
+        #region 可以移除的辅助函数
+        public bool ControlDir_MoveFaceDir() => Player.GetModPlayer<InputControlAboutDashOrDoubleChickButtonPlayer>().IsPlayerFaceDoubleTapDir(true);
+        public bool ControlDir_MoveUnFaceDir() => Player.GetModPlayer<InputControlAboutDashOrDoubleChickButtonPlayer>().IsPlayerFaceDoubleTapDir(false);
+        #endregion
     }
 }

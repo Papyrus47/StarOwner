@@ -198,12 +198,18 @@ namespace StarOwner.Content.NPCs.Skills.Phase2.BrokenStarStickWhip
                             OnHitTime = 5;
                             Player.HurtModifiers hurtModifiers = new()
                             {
-                                Dodgeable = false,
+                                Dodgeable = true,
+                                HitDirection = NPC.spriteDirection,
+                                HitDirectionOverride = NPC.spriteDirection
                             };
                             hurtModifiers.SourceDamage += ActionDmg - 1f;
                             hurtModifiers.SourceDamage += StarOwner.DamageAdd;
                             Player.HurtInfo hurtInfo = hurtModifiers.ToHurtInfo(4, Target.statDefense, Target.DefenseEffectiveness.Value, 0, true);
                             hurtInfo.DamageSource = PlayerDeathReason.ByNPC(NPC.whoAmI);
+                            if (PlayerLoader.FreeDodge(Target, hurtInfo))
+                                break;
+                            if (PlayerLoader.ConsumableDodge(Target, hurtInfo))
+                                break;
                             Target.Hurt(hurtInfo);
                             for (int j = Main.rand.Next(5, 8); j > 0; j--)
                             {

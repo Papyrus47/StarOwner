@@ -68,7 +68,7 @@ namespace StarOwner.Core.SpurtHelpers
 
             Texture2D tex = TextureAssets.Projectile[projectile.type].Value;
             Rectangle drawRect = new Rectangle(0, (int)((float)projectile.frame / Main.projFrames[projectile.type] * tex.Height), tex.Width, tex.Height);
-            sb.Draw(tex, drawPos, drawRect, Lighting.GetColor((spurt.SpurtPos / 16).ToPoint()), projectile.rotation, drawSize / 2f, projectile.scale, SpriteEffects.None, 0f);
+            sb.Draw(tex, drawPos, drawRect, Lighting.GetColor((spurt.SpurtPos / 16).ToPoint()), projectile.rotation + MathHelper.PiOver4, drawRect.Size() / 2f, projectile.scale, SpriteEffects.None, 0f);
 
             #endregion
         }

@@ -50,11 +50,12 @@ namespace StarOwner.Core.SkillProjs.GeneralSkills
             Player.itemAnimation = Player.itemTime = 2;
             Player.ChangeDir(Projectile.direction);
             Player.heldProj = Projectile.whoAmI;
-            Player.fullRotation = Projectile.velocity.X * SpurtHelper.Time * 0.02f;
-            Player.fullRotationOrigin = new Vector2(Player.width * 0.5f, Player.height);
-            Player.itemRotation = MathF.Atan2(Projectile.velocity.Y * Player.direction, Projectile.velocity.X * Player.direction);
+            //Player.fullRotation = Projectile.velocity.X * SpurtHelper.Time * 0.02f;
+            //Player.fullRotationOrigin = new Vector2(Player.width * 0.5f, Player.height);
+            //Player.itemRotation = MathF.Atan2(Projectile.velocity.Y * Player.direction, Projectile.velocity.X * Player.direction);
             SyncData();
-
+            if ((int)Projectile.ai[0] == setting.UseTimeMax.Invoke())
+                SoundEngine.PlaySound(SoundID.Item1 with { Pitch = 0.5f }, Projectile.Center);
             SpurtHelper.Update(Projectile.Center, Player.direction, Projectile.velocity);
             if (setting.UseTimeMax.Invoke() * 1.7f <= Projectile.ai[0])
             {
@@ -92,11 +93,11 @@ namespace StarOwner.Core.SkillProjs.GeneralSkills
             Projectile.CritChance = Player.GetWeaponCrit(Player.HeldItem);
             TheUtility.ResetProjHit(Projectile);
             Player.fullRotation = 0;
-            SoundEngine.PlaySound(SoundID.Item1 with { Pitch = 0.5f }, Projectile.Center);
             Projectile.numHits = 0;
+            SpurtHelper.Time = 0;
             if (Main.myPlayer == Player.whoAmI)
                 Projectile.velocity = (Main.MouseWorld - Player.Center).SafeNormalize(Vector2.UnitX);
-            SpurtHelper.Change(setting.SpurtLength.Invoke(), Projectile.velocity, setting.UseTimeMax.Invoke(), Projectile.Size * 0.2f, 1, ASpurtDraw_Proj);
+            SpurtHelper.Change(setting.SpurtLength.Invoke(), Projectile.velocity, (int)(setting.UseTimeMax.Invoke() * 1.7f), Projectile.Size * 0.2f, 1, ASpurtDraw_Proj);
             SyncData();
         }
         public override void OnSkillDeactivate()
@@ -140,6 +141,6 @@ namespace StarOwner.Core.SkillProjs.GeneralSkills
             return false;
         }
         public override bool ActivationCondition() => setting?.ActivationCondition?.Invoke() == true;
-        public override bool SwitchCondition() => Projectile.ai[0] / setting.UseTimeMax.Invoke() > 0.8f;
+        public override bool SwitchCondition() => Projectile.ai[0] / setting.UseTimeMax.Invoke() > 0.5f;
     }
 }

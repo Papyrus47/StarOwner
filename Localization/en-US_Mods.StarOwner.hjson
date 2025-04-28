@@ -1,7 +1,28 @@
 ﻿Items:{
-	BrokenStarsSlash:{
+	EnterStarGround:{
+		DisplayName:Enter Star Ground
+		Tooltip:go to Star Ground.
+	}
+	BrokenStarsSlashItem:{
 		DisplayName:Broken Stars Slash
-		Tooltip:go to Star Ground
+		Tooltip:
+		'''
+		Slash All.
+		Combo1: Left - Left - Left Combo 2: Left - Pause - left - Left Combo 3: Left - Left - Pause - left
+		Cross Slash: Double-click the direction key you are going to face, left
+		Strong upward lift: Double-click the direction key you want to face back, left, and hold it down to lift off
+		Falling star: In the sky, left
+		Block counterattack: right
+		Transformation: Long press the left mouse button
+		'''
+	}
+	StarPiercedItem:{
+		DisplayName:Star Pierced
+		Tooltip:
+		'''
+		Lazy.
+		Bone.
+		'''
 	}
 }
 NPCs:{

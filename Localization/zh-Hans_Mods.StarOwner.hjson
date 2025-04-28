@@ -1,14 +1,34 @@
 ﻿Items:{
-	BrokenStarsSlash:{
-		DisplayName:破星之斩
-		Tooltip:前往星辰之地
+	EnterStarGround:{
+		DisplayName:进入星辰之地
+		Tooltip:进入星辰之地
+	}
+	BrokenStarsSlashItem:{
+		DisplayName:破星连斩
+		Tooltip:
+		'''
+		切掉所有
+		Combo1:左-左-左  Combo2:左-停顿-左-左  Combo3:左-左-停顿-左
+		十字斩:双击将要面朝的方向键,左
+		强上挑:双击将要背朝的方向键,左,按住可升空
+		坠星:空中,左
+		格挡反击:右
+
+		变形：长按左键
+		'''
+	}
+	StarPiercedItem:{
+		DisplayName:繁星刺破
+		Tooltip:
+		'''
+		懒
+		骨头
+		'''
 	}
 }
-
 NPCs:{
 	StarOwnerNPC.DisplayName : 星辰之主
 }
-
 Bosses:{
 	StarOwner:{
 		BossName:星辰之主

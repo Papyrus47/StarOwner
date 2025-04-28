@@ -1,4 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
+using StarOwner.Content.Items.Weapons.BrokenStarsSlashItem;
+using StarOwner.Content.Items.Weapons.StarPiercedItem;
 using StarOwner.Content.NPCs.Mode;
 using StarOwner.Content.NPCs.Particles;
 using StarOwner.Content.NPCs.Skills.General;
@@ -27,6 +29,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Terraria.GameContent.ItemDropRules;
 using Terraria.ModLoader.IO;
 using static StarOwner.Content.NPCs.Skills.BasicSwingSkill;
 
@@ -144,6 +147,11 @@ namespace StarOwner.Content.NPCs
                 return false;
             }
             return base.CheckDead();
+        }
+        public override void ModifyNPCLoot(NPCLoot npcLoot)
+        {
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<StarPiercedItem>()));
+            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<BrokenStarsSlashItem>()));
         }
         public override bool? DrawHealthBar(byte hbPosition, ref float scale, ref Vector2 position)
         {
@@ -1109,13 +1117,19 @@ namespace StarOwner.Content.NPCs
                         }
                         Player.HurtModifiers hurtModifiers = new()
                         {
-                            Dodgeable = false,
+                            Dodgeable = true,
+                            HitDirection = NPC.spriteDirection,
+                            HitDirectionOverride = NPC.spriteDirection
                         };
                         hurtModifiers.SourceDamage += skill.setting.ActionDmg - 1f;
                         hurtModifiers.SourceDamage += DamageAdd;
                         skill.onSwing.modifyHit.Invoke(TargetPlayer, ref hurtModifiers);
                         Player.HurtInfo hurtInfo = hurtModifiers.ToHurtInfo(skill.WeaponDamage, TargetPlayer.statDefense, TargetPlayer.DefenseEffectiveness.Value, 0, true);
                         hurtInfo.DamageSource = PlayerDeathReason.ByNPC(NPC.whoAmI);
+                        if (PlayerLoader.FreeDodge(TargetPlayer, hurtInfo))
+                            return;
+                        if (PlayerLoader.ConsumableDodge(TargetPlayer, hurtInfo))
+                            return;
                         TargetPlayer.Hurt(hurtInfo);
                         for (int j = Main.rand.Next(5, 8); j > 0; j--)
                         {
@@ -1167,7 +1181,9 @@ namespace StarOwner.Content.NPCs
                         }
                         Player.HurtModifiers hurtModifiers = new()
                         {
-                            Dodgeable = false,
+                            Dodgeable = true,
+                            HitDirection = NPC.spriteDirection,
+                            HitDirectionOverride = NPC.spriteDirection
                         };
                         NPC.velocity.X *= 0.99f;
                         hurtModifiers.SourceDamage += DamageAdd;
@@ -1176,6 +1192,10 @@ namespace StarOwner.Content.NPCs
                         TargetPlayer.Center = skill.swingHelper.Center + skill.swingHelper.velocity;
                         Player.HurtInfo hurtInfo = hurtModifiers.ToHurtInfo(skill.WeaponDamage, TargetPlayer.statDefense, TargetPlayer.DefenseEffectiveness.Value, 0, true);
                         hurtInfo.DamageSource = PlayerDeathReason.ByNPC(NPC.whoAmI);
+                        if (PlayerLoader.FreeDodge(TargetPlayer, hurtInfo))
+                            return;
+                        if (PlayerLoader.ConsumableDodge(TargetPlayer, hurtInfo))
+                            return;
                         TargetPlayer.Hurt(hurtInfo);
                         for (int j = Main.rand.Next(5, 8); j > 0; j--)
                         {
@@ -1207,7 +1227,9 @@ namespace StarOwner.Content.NPCs
                     {
                         Player.HurtModifiers hurtModifiers = new()
                         {
-                            Dodgeable = false,
+                            Dodgeable = true,
+                            HitDirection = NPC.spriteDirection,
+                            HitDirectionOverride = NPC.spriteDirection
                         };
                         hurtModifiers.SourceDamage += DamageAdd;
                         skill.onSwing.modifyHit.Invoke(TargetPlayer, ref hurtModifiers);
@@ -2316,12 +2338,18 @@ namespace StarOwner.Content.NPCs
             {
                 Player.HurtModifiers hurtModifiers = new()
                 {
-                    Dodgeable = false,
+                    Dodgeable = true,
+                    HitDirection = NPC.spriteDirection,
+                    HitDirectionOverride = NPC.spriteDirection
                 };
                 hurtModifiers.ScalingArmorPenetration += 1f;
                 hurtModifiers.SourceDamage += 9f;
                 Player.HurtInfo hurtInfo = hurtModifiers.ToHurtInfo(skill.WeaponDamage, TargetPlayer.statDefense, TargetPlayer.DefenseEffectiveness.Value, 0, true);
                 hurtInfo.DamageSource = PlayerDeathReason.ByNPC(NPC.whoAmI);
+                if (PlayerLoader.FreeDodge(TargetPlayer, hurtInfo))
+                    return;
+                if (PlayerLoader.ConsumableDodge(TargetPlayer, hurtInfo))
+                    return;
                 TargetPlayer.Hurt(hurtInfo);
                 for (int j = Main.rand.Next(5, 8); j > 0; j--)
                 {

@@ -19,6 +19,18 @@ namespace StarOwner.Core.ModPlayers
         {
             starPower.Value = 0;
         }
+        public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genDust, ref PlayerDeathReason damageSource)
+        {
+            if(damage < Player.statLifeMax2)
+            {
+                starPower.Value = 0;
+                Player.statLife += 350;
+                if (Player.statLife > Player.statLifeMax2)
+                    Player.statLife = Player.statLifeMax2;
+                return false;
+            }
+            return base.PreKill(damage, hitDirection, pvp, ref playSound, ref genDust, ref damageSource);
+        }
         public override void PostUpdate()
         {
             starPower.ValueMax = Player.statLifeMax2;
