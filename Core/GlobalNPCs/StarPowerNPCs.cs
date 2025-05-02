@@ -25,7 +25,7 @@ namespace StarOwner.Core.GlobalNPCs
             starPower.Value = Math.Clamp(starPower.Value, 0, starPower.ValueMax);
             if(starPower.starPowerResetTime > 0)
                 starPower.starPowerResetTime--;
-            if (npc.life <= npc.lifeMax - 350 && starPower.starPowerResetTime <= 0)
+            if (npc.life <= npc.lifeMax - 350 && starPower.starPowerResetTime <= 0 && starPower.Value > 0)
             {
                 starPower.Value--;
                 npc.life += 350;

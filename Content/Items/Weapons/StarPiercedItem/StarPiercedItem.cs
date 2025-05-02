@@ -13,7 +13,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria.Graphics.Effects;
-using static StarOwner.QuickAssetReference.ModAssets_Texture2D.Content.NPCs;
 
 namespace StarOwner.Content.Items.Weapons.StarPiercedItem
 {

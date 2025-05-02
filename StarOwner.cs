@@ -19,8 +19,8 @@ namespace StarOwner
             Instance = this;
             DefAtk = KeybindLoader.RegisterKeybind(this, "DefaultAttack", Microsoft.Xna.Framework.Input.Keys.F);
             DodgeDamage = KeybindLoader.RegisterKeybind(this, "DodgeAttack", Microsoft.Xna.Framework.Input.Keys.X);
-            MusicLoader.AddMusic(this, "Assets/Music/Boss1");
-            MusicLoader.AddMusic(this, "Assets/Music/StarGroundMusic");
+            //MusicLoader.AddMusic(this, "Assets/Music/Boss1");
+            //MusicLoader.AddMusic(this, "Assets/Music/StarGroundMusic");
             //MusicLoader.AddMusic(this, "Assets/Music/Ropocalypse2");
         }
         public override void PostSetupContent()
